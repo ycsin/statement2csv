@@ -1,0 +1,1238 @@
+<!doctype html>
+<!--
+  SPDX-License-Identifier: Apache-2.0
+  Copyright 2026 Yong Cong Sin <yongcong.sin@gmail.com>
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-57uSHFoPhohBYxKqRDwt+zqYYQ560HrL2HWPZrsv9Qw=' 'sha256-H2XYhmzR6vBkg/miaFjx9aJmxN1BBn3p80RQfxIinvk=' 'sha256-GIPUTiMQYXBmxau6TsAmQkK4V4oJOgM8Dg7UtD1cRpE=' 'sha256-wMag0bpYipvJgH8xqPDyNqpEEq7jkBPSTC6SA8s+NfM=' 'sha256-4VYKU/aAo8oOIwz1Fk1ip8qCSlCeQHBPfwJAhyHraYA=' 'sha256-ZBxkghUj7Ik1kdq5Noy/LG/Of0oMiwHku5p9Yx5i1Dg=' 'sha256-rDjmSpbjgWHGqEB7mLCnxaTQ3dJwdhgH/zgRD1uVZzE=' 'sha256-KPhO3XhKbg+E+J/o68eq6ukbCVh0KYz1D0Oc3+JI0rg=' 'sha256-XVKR6oVjmUk4v/6pNVj6rzBZpxx7iWXjXyrJh7aaz/Y=' 'sha256-w6eAJ2LTz+r/shPahtlNBZj9DP47/F/5eTnZvnagnBo=' 'sha256-fhjeUzIXpCC2n7bo5oUUT3kc7zdWloXfQLqSs8bnNic='; style-src 'sha256-vhxI7IXkrBgLQllkf1BvQj7rWL/uvi0X++5+SJi+ANU='; img-src data: blob:; connect-src blob: data:; form-action 'none'; base-uri 'none'">
+<meta name="referrer" content="no-referrer">
+<title>eToro Statement Converter</title>
+<style>
+/* SPDX-License-Identifier: Apache-2.0 */
+/* Copyright 2026 Yong Cong Sin <yongcong.sin@gmail.com> */
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --text: #1b1f24; --muted: #5d6673; --line: #dfe3e8;
+  --accent: #2f6fde; --accent-text: #ffffff; --accent-soft: #e8f0fd;
+  --warn-bg: #fff5e0; --warn-text: #7a4b00; --inv: #2f6fde; --cash: #2f8a5b;
+  --radius: 10px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111418; --surface: #1a1e24; --text: #e7eaee; --muted: #9aa4b1; --line: #2c323a;
+    --accent: #6d9cf0; --accent-text: #0d1117; --accent-soft: #1f2a3d;
+    --warn-bg: #3a2c12; --warn-text: #f3c873; --inv: #6d9cf0; --cash: #5cc28f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111418; --surface: #1a1e24; --text: #e7eaee; --muted: #9aa4b1; --line: #2c323a;
+  --accent: #6d9cf0; --accent-text: #0d1117; --accent-soft: #1f2a3d;
+  --warn-bg: #3a2c12; --warn-text: #f3c873; --inv: #6d9cf0; --cash: #5cc28f;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; }
+h1 { font-size: 24px; margin: 0 0 4px; letter-spacing: -0.01em; }
+h2 { font-size: 16px; margin: 32px 0 12px; }
+h3 { font-size: 15px; margin: 0; }
+p { margin: 0 0 8px; }
+.muted, .lede { color: var(--muted); }
+.lede { margin-bottom: 24px; }
+#drop {
+  border: 2px dashed var(--line); border-radius: var(--radius); background: var(--surface);
+  padding: 36px 16px; text-align: center; cursor: pointer; transition: border-color .15s;
+}
+#drop:hover, #drop:focus-visible, #drop.over { border-color: var(--accent); background: var(--accent-soft); outline: none; }
+#drop strong { display: block; font-size: 16px; margin-bottom: 4px; }
+#busy { margin-top: 12px; color: var(--muted); }
+#status { margin-top: 16px; }
+.warn { background: var(--warn-bg); color: var(--warn-text); padding: 8px 12px; border-radius: 8px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin: 24px 0 8px; }
+.toolbar label, .toolbar .field { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+select, button { font: inherit; color: inherit; }
+select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+button { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+button:hover:not(:disabled) { border-color: var(--accent); }
+button:disabled { opacity: .5; cursor: default; }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 600; }
+.spacer { flex: 1; }
+.hint { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+#cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.card header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.tag { font-size: 12px; padding: 1px 8px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+.tag.investment { color: var(--inv); }
+.tag.cash { color: var(--cash); }
+dl { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; margin: 0; }
+dt { font-size: 12px; color: var(--muted); }
+dd { margin: 0; font-variant-numeric: tabular-nums; }
+.note { font-size: 13px; color: var(--muted); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; align-self: flex-start; }
+.seg button { border: 0; border-radius: 0; padding: 6px 12px; font-size: 14px; background: var(--surface); color: var(--muted); }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button.on { background: var(--accent-soft); color: var(--text); font-weight: 600; }
+@media (max-width: 560px) {
+  .toolbar .field { width: 100%; }
+  #mode { display: flex; width: 100%; }
+  #mode button { flex: 1 1 0; padding: 6px 4px; font-size: 13px; line-height: 1.25; }
+}
+.buttons { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
+.buttons button { font-size: 13px; }
+.config { margin-bottom: 12px; }
+.account-row { border-top: 1px solid var(--line); padding: 10px 0; }
+.account-row.excluded .p-head strong { text-decoration: line-through; color: var(--muted); }
+.p-head { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; margin-bottom: 6px; }
+.p-head .muted { font-size: 13px; }
+.p-controls { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: end; }
+.p-controls label { display: grid; gap: 2px; font-size: 12px; color: var(--muted); }
+.p-controls label.check { display: flex; gap: 6px; align-items: center; font-size: 13px; color: var(--text); padding-bottom: 6px; }
+.p-controls input:not([type]), .p-controls select { font: inherit; font-size: 14px; color: var(--text); padding: 5px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); min-width: 0; }
+.p-controls input:not([type]) { width: 13em; max-width: 100%; }
+#config-reset { margin-top: 6px; }
+.warn-item { color: var(--warn-text); }
+#diagnostics ul ul { margin: 2px 0 6px; font-size: 13px; }
+details { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px; margin-top: 12px; }
+summary { cursor: pointer; font-weight: 600; }
+details ul, details ol { margin: 8px 0 12px; padding-left: 20px; }
+details li { margin: 2px 0; }
+code { font-size: 13px; background: var(--accent-soft); padding: 1px 4px; border-radius: 4px; }
+#empty { margin-top: 24px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>eToro statement to CSV and QIF</h1>
+  <p class="lede">Turns an eToro account statement (the Excel <em>.xlsx</em> download) into a CSV file you can import into a personal finance app: deposits and withdrawals one by one, and the rest (trading profit/loss, dividends, fees, open positions' gain or loss) as one returns row per month, or broken down by kind, so the balance follows your total equity. The file is read in this browser and never uploaded.</p>
+
+  <div id="drop" role="button" tabindex="0" aria-describedby="drop-help">
+    <strong>Drop the statement .xlsx here</strong>
+    <span id="drop-help" class="muted">or click to choose it. In eToro: Settings, Account, Account statement; pick the whole period you want and download as Excel.</span>
+  </div>
+  <input id="picker" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
+  <p id="busy" hidden></p>
+  <div id="status"></div>
+
+  <p id="empty" class="muted">No statement yet.</p>
+
+  <section id="results" hidden>
+    <div class="toolbar">
+      <label>From <select id="from"></select></label>
+      <label>To <select id="to"></select></label>
+      <div class="field">
+        <span id="mode-label">Detail</span>
+        <div id="mode" class="seg" role="radiogroup" aria-labelledby="mode-label">
+          <button role="radio" data-mode="balance">Balance only</button>
+          <button role="radio" data-mode="month">By kind, monthly</button>
+          <button role="radio" data-mode="day">By kind, daily</button>
+        </div>
+      </div>
+      <span class="spacer"></span>
+      <button id="clear">Clear</button>
+      <button id="zip" class="primary">Download all (.zip)</button>
+    </div>
+    <p class="hint">Most apps don't skip duplicates when importing CSVs, so export only months you haven't imported yet. The account's starting balance for the first exported month is in the Accounts CSV.</p>
+    <div id="cards"></div>
+    <div id="diagnostics"></div>
+
+    <details>
+      <summary>What the files contain</summary>
+      <ul>
+        <li><strong>Balance only</strong> (default): every deposit and withdrawal, and one <em>Returns (month-end adjustment)</em> row per month with everything else, broken down in the notes.</li>
+        <li><strong>By kind</strong>: every deposit and withdrawal; per month (or per day) one row each for closed positions' profit/loss, dividends, overnight fees and refunds, interest, and other fees and adjustments (index price adjustments, stamp duty, spreads, corrections), with the breakdown in the notes; and a <em>Change in unrealized gain/loss</em> row at each holdings snapshot and at the statement end. The running balance equals total equity (realized equity plus open positions' profit/loss) at those dates, and follows realized equity in between.</li>
+        <li>In every mode the running balance equals total equity at each holdings snapshot (month ends only for monthly rows) and at the statement end, and follows realized equity in between: eToro reports open positions' value only at those dates.</li>
+        <li>Opening a position, copy-trading moves and stock splits don't change realized equity and are not exported.</li>
+        <li>Open positions' profit/loss is worked out from the holdings snapshots: for each position, its value less the amount invested (times leverage for CFDs, and the other way round for shorts). The statement end uses the summary's ending total equity.</li>
+        <li><strong>Balances CSV</strong>: total equity at each of those dates, for apps that record balance updates instead.</li>
+        <li><strong>QIF</strong>: the same transactions as a QIF file, starting with an <em>Opening Balance</em> record (the balance just before the first entry), so no separate starting balance or column mapping is needed. QIF has no currency field: import it into an account of the statement's currency. Dates are <code>YYYY-MM-DD</code>; the name is the payee (<code>P</code>) and the notes the memo (<code>M</code>).</li>
+        <li><strong>Accounts CSV</strong>: <code>Account type, Name, Balance, Currency, Balance Date</code> with the balance just before the first exported entry.</li>
+        <li>Columns: transactions <code>date, amount, currency, name, notes</code> with <em>inflows positive</em>; balances <code>date, balance, currency</code>. Dates are <code>YYYY-MM-DD</code>.</li>
+      </ul>
+    </details>
+  </section>
+</main>
+<script>// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Yong Cong Sin <yongcong.sin@gmail.com>
+// Escaping for the page's markup (docs/ARCHITECTURE.md, core/escape.js). Works in the browser
+// (self.StatementEscape) and in Node (module.exports). Nothing here runs at load time.
+//
+//   esc(s)          String(s) with & < > " ' replaced by entities. Moved verbatim from the
+//                   reference app's app.js:435 (identical in every old page; the derivation map
+//                   in docs/MIGRATION.md names it).
+//   html`…${v}…`    -> Html. The literal template text is markup; each interpolation renders as
+//                     - an Html value: its markup, unchanged;
+//                     - an Array whose elements are all Html values or such Arrays: their markup
+//                       joined with "";
+//                     - anything else: esc(String(v)), so it prints exactly as a template
+//                       literal would (undefined -> "undefined", a data array -> "a,b"), escaped.
+//   setHtml(el, h)  The only innerHTML assignment in core/ and providers/. Throws a TypeError
+//                   unless h is an Html value.
+//   cssToken(s)     String(s) when it is a plain class token (a-z, 0-9 and "-"), else "other".
+//
+// Html values are recognised by identity, never by shape: frozen instances of a module-private
+// class, registered in a module-private WeakSet that only html adds to. A look-alike (an object
+// from JSON.parse, a structural copy of a real Html value, an object whose toString returns
+// markup) is escaped like any other value, and setHtml refuses it. There is no raw() escape
+// hatch: markup only ever comes from literal template text.
+(function (root, factory) {
+  if (typeof module === "object" && module.exports) module.exports = factory();
+  else root.StatementEscape = factory();
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
+
+  function esc(s) { return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]); }
+
+  class Html { constructor(s) { this.s = s; } }
+  const minted = new WeakSet();
+
+  // An Array whose elements are all Html values or such Arrays. A hole, or an array that
+  // contains itself, makes it data, rendered like any other value.
+  function isMarkupList(v, path) {
+    if (!Array.isArray(v) || path.has(v)) return false;
+    path.add(v);
+    try {
+      for (let i = 0; i < v.length; i++) if (!minted.has(v[i]) && !isMarkupList(v[i], path)) return false;
+      return true;
+    } finally {
+      path.delete(v);
+    }
+  }
+
+  function joined(list) {
+    let s = "";
+    for (let i = 0; i < list.length; i++) s += minted.has(list[i]) ? list[i].s : joined(list[i]);
+    return s;
+  }
+
+  function render(v) {
+    if (minted.has(v)) return v.s;
+    if (isMarkupList(v, new Set())) return joined(v);
+    return esc(String(v));
+  }
+
+  // Only a template tag call passes the frozen strings array with its frozen raw copy.
+  function html(strings, ...values) {
+    if (!Array.isArray(strings) || !Object.isFrozen(strings) || !Array.isArray(strings.raw) || !Object.isFrozen(strings.raw)
+        || strings.length !== values.length + 1) {
+      throw new TypeError("html is a template tag: write html`…`");
+    }
+    let s = "";
+    for (let i = 0; i < strings.length; i++) {
+      if (typeof strings[i] !== "string") throw new TypeError("html: the template text has an invalid escape sequence");
+      s += strings[i];
+      if (i < values.length) s += render(values[i]);
+    }
+    const h = Object.freeze(new Html(s));
+    minted.add(h);
+    return h;
+  }
+
+  function setHtml(el, h) {
+    if (!minted.has(h)) throw new TypeError("setHtml needs an Html value made by html`…`");
+    el.innerHTML = h.s;
+  }
+
+  const cssToken = (s) => (/^[a-z0-9-]+$/.test(String(s)) ? String(s) : "other");
+
+  return Object.freeze({ esc, html, setHtml, cssToken });
+});
+</script>
+<script>// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Yong Cong Sin <yongcong.sin@gmail.com>
+// Page helpers shared by every app (docs/ARCHITECTURE.md, core/shell.js). Works in the browser
+// (self.StatementShell) and in Node (module.exports); every function looks up document, URL
+// and the elements when it is called, never while the file is evaluated.
+//
+//   $(sel)            document.querySelector(sel)
+//   setBusy(msg)      #busy text, hidden when there is no message
+//   fmtInt(n), fmtMoney(n), monthLabel("YYYY-MM")   UI formatting in the browser's locale
+//   download(name, blob)   the anchor + object-URL sequence; the URL is revoked after 1 s
+//   wireInput({onFiles, onMode, onRange, onClear})  the input listeners, registered in the old
+//                     pages' order: #drop click and keydown; #picker change; document dragenter,
+//                     dragover, dragleave, drop, then the drop that loads the files; #mode
+//                     click; #from and #to change; #clear click. onFiles gets the FileList
+//                     itself, onMode the clicked button's mode, onRange the change event (as the
+//                     old render did), onClear nothing.
+//
+// Moved verbatim from the reference app (the derivation map in docs/MIGRATION.md names it;
+// every old page has the same lines): $ app.js:7, monthLabel :105, download :356-363, the
+// input block :420-431 (render -> onRange, setMode -> onMode, addFiles -> onFiles, the #clear
+// body -> onClear), setBusy :434, fmtInt and fmtMoney :436-437.
+(function (root, factory) {
+  if (typeof module === "object" && module.exports) module.exports = factory();
+  else root.StatementShell = factory();
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
+
+  const $ = (sel) => document.querySelector(sel);
+  const monthLabel = (m) => new Date(`${m}-01T00:00:00`).toLocaleDateString(undefined, { month: "short", year: "numeric" });
+
+  // ---------- downloads ----------
+  function download(name, blob) {
+    const url = URL.createObjectURL(blob);
+    const a = Object.assign(document.createElement("a"), { href: url, download: name });
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  // ---------- input ----------
+  function wireInput({ onFiles, onMode, onRange, onClear }) {
+    const drop = $("#drop"), picker = $("#picker");
+    drop.addEventListener("click", () => picker.click());
+    drop.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); picker.click(); } });
+    picker.addEventListener("change", () => { onFiles(picker.files); picker.value = ""; });
+    for (const ev of ["dragenter", "dragover"]) document.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("over"); });
+    for (const ev of ["dragleave", "drop"]) document.addEventListener(ev, (e) => { e.preventDefault(); if (ev === "drop" || e.target === document.documentElement) drop.classList.remove("over"); });
+    document.addEventListener("drop", (e) => onFiles(e.dataTransfer.files));
+    $("#mode").addEventListener("click", (e) => { const b = e.target.closest("button[data-mode]"); if (b) onMode(b.dataset.mode); });
+    $("#from").addEventListener("change", onRange);
+    $("#to").addEventListener("change", onRange);
+    $("#clear").addEventListener("click", () => { onClear(); });
+  }
+
+  // ---------- helpers ----------
+  function setBusy(msg) { $("#busy").textContent = msg || ""; $("#busy").hidden = !msg; }
+  const fmtInt = (n) => n.toLocaleString();
+  const fmtMoney = (n) => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  return { $, setBusy, fmtInt, fmtMoney, monthLabel, download, wireInput };
+});
+</script>
+<script>// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Yong Cong Sin <yongcong.sin@gmail.com>
+// Minimal store-only ZIP writer for Download all and the Combined zips: UTF-8 names (flag
+// 0x0800), every entry stamped with the DOS time and date of one clock reading (local
+// getters), no compression, no ZIP64. Moved from the old pages' app.js (docs/MIGRATION.md):
+// the CRC table, crc32 and the writer's body are verbatim; the one change splits zipParts
+// out, with the time as a parameter, so Node builds the same bytes for a fixed time.
+(function (root, factory) {
+  if (typeof module === "object" && module.exports) module.exports = factory();
+  else root.StatementZip = factory();
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
+
+  const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+  const crc32 = (b) => { let c = 0xffffffff; for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
+
+  // files: [{ name, text }] (other fields are ignored); now: the Date whose local time stamps
+  // every entry. Returns the Blob parts: each local header with its name and data, then the
+  // central directory, then the end record.
+  function zipParts(files, now) {
+    const enc = new TextEncoder();
+    const chunks = [], central = [];
+    let offset = 0;
+    const dosTime = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1);
+    const dosDate = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+    const put = (view, fields) => fields.forEach(([o, v, s]) => (s === 4 ? view.setUint32(o, v, true) : view.setUint16(o, v, true)));
+    for (const f of files) {
+      const name = enc.encode(f.name), data = enc.encode(f.text), crc = crc32(data);
+      const local = new DataView(new ArrayBuffer(30));
+      put(local, [[0, 0x04034b50, 4], [4, 20, 2], [6, 0x0800, 2], [8, 0, 2], [10, dosTime, 2], [12, dosDate, 2], [14, crc, 4],
+        [18, data.length, 4], [22, data.length, 4], [26, name.length, 2], [28, 0, 2]]);
+      const cen = new DataView(new ArrayBuffer(46));
+      put(cen, [[0, 0x02014b50, 4], [4, 20, 2], [6, 20, 2], [8, 0x0800, 2], [10, 0, 2], [12, dosTime, 2], [14, dosDate, 2], [16, crc, 4],
+        [20, data.length, 4], [24, data.length, 4], [28, name.length, 2], [30, 0, 2], [32, 0, 2], [34, 0, 2], [36, 0, 2], [38, 0, 4], [42, offset, 4]]);
+      chunks.push(local, name, data);
+      central.push(cen, name);
+      offset += 30 + name.length + data.length;
+    }
+    const size = central.reduce((s, c) => s + c.byteLength, 0);
+    const end = new DataView(new ArrayBuffer(22));
+    put(end, [[0, 0x06054b50, 4], [4, 0, 2], [6, 0, 2], [8, files.length, 2], [10, files.length, 2], [12, size, 4], [16, offset, 4], [20, 0, 2]]);
+    return [...chunks, ...central, end];
+  }
+
+  // The page's writer: the parts stamped with the current time, as one zip Blob.
+  function zip(files) {
+    return new Blob(zipParts(files, new Date()), { type: "application/zip" });
+  }
+
+  return { crc32, zipParts, zip };
+});
+</script>
+<script>// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Yong Cong Sin <yongcong.sin@gmail.com>
+// Saved settings in localStorage, under the provider's frozen keys: the export mode and the
+// configurator's per-account settings. Every access sits inside try/catch, so a page without
+// usable storage (blocked, private mode, quota) falls back to the defaults, as the old pages
+// did. Moved from the old pages' app.js (docs/MIGRATION.md), with the key and the accepted
+// mode ids as parameters instead of constants.
+(function (root, factory) {
+  if (typeof module === "object" && module.exports) module.exports = factory();
+  else root.StatementStorage = factory();
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
+
+  // ids: the mode ids, the default first. A stored value is used only if it is another of them.
+  function loadMode(key, ids) {
+    try { const m = localStorage.getItem(key); return ids.slice(1).includes(m) ? m : ids[0]; } catch { return ids[0]; }
+  }
+  function saveMode(key, mode) {
+    try { localStorage.setItem(key, mode); } catch { /* storage unavailable */ }
+  }
+
+  // key == null: the app has no configurator, so nothing is read and nothing is written.
+  function loadConfig(key) {
+    if (key == null) return {};
+    try { return JSON.parse(localStorage.getItem(key)) || {}; } catch { return {}; }
+  }
+  function saveConfig(key, cfg) {
+    if (key == null) return;
+    try { localStorage.setItem(key, JSON.stringify(cfg)); } catch { /* storage unavailable */ }
+  }
+
+  return { loadMode, saveMode, loadConfig, saveConfig };
+});
+</script>
+<script>// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Yong Cong Sin <yongcong.sin@gmail.com>
+// Minimal .xlsx reader: zip central directory + raw-deflate (supplied by the
+// caller: DecompressionStream in the browser, zlib in Node), shared strings and
+// worksheet cells. Returns { sheetName: [[cell, ...], ...] } with numbers as
+// numbers and everything else as strings. Styles, formulas and dates are not
+// interpreted (date cells stay Excel serial numbers).
+(function (root, factory) {
+  if (typeof module === "object" && module.exports) module.exports = factory();
+  else root.Xlsx = factory();
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
+
+  const u16 = (b, o) => b[o] | (b[o + 1] << 8);
+  const u32 = (b, o) => (b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24)) >>> 0;
+
+  // name -> { method, offset, size } from the zip central directory.
+  function zipEntries(b) {
+    let eocd = -1;
+    for (let i = b.length - 22; i >= Math.max(0, b.length - 65557); i--) if (u32(b, i) === 0x06054b50) { eocd = i; break; }
+    if (eocd < 0) throw new Error("not a zip file (no end of central directory)");
+    const count = u16(b, eocd + 10);
+    let p = u32(b, eocd + 16);
+    const out = {};
+    const dec = new TextDecoder();
+    for (let n = 0; n < count; n++) {
+      if (u32(b, p) !== 0x02014b50) throw new Error("bad zip central directory");
+      const method = u16(b, p + 10), size = u32(b, p + 20), nameLen = u16(b, p + 28), extra = u16(b, p + 30), comment = u16(b, p + 32);
+      const local = u32(b, p + 42);
+      const name = dec.decode(b.subarray(p + 46, p + 46 + nameLen));
+      out[name] = { method, local, size };
+      p += 46 + nameLen + extra + comment;
+    }
+    return out;
+  }
+
+  async function readEntry(b, e, inflateRaw) {
+    if (u32(b, e.local) !== 0x04034b50) throw new Error("bad zip local header");
+    const start = e.local + 30 + u16(b, e.local + 26) + u16(b, e.local + 28);
+    const data = b.subarray(start, start + e.size);
+    if (e.method === 0) return data;
+    if (e.method === 8) return inflateRaw(data);
+    throw new Error(`unsupported zip compression method ${e.method}`);
+  }
+
+  const ENT = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" };
+  const unescape = (s) => s.replace(/&(#x[0-9a-fA-F]+|#\d+|amp|lt|gt|quot|apos);/g, (_, e) =>
+    e[0] === "#" ? String.fromCodePoint(e[1] === "x" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10)) : ENT[e]);
+  // Text of all <t> elements inside a fragment (rich text runs are concatenated).
+  // Tags may carry a namespace prefix (<x:row>), so every pattern allows one.
+  const texts = (xml) => { let s = ""; const re = /<(?:\w+:)?t(?:\s[^>]*)?>([\s\S]*?)<\/(?:\w+:)?t>/g; let m; while ((m = re.exec(xml))) s += m[1]; return unescape(s); };
+  const colIndex = (ref) => { let n = 0; for (const ch of ref) { const c = ch.charCodeAt(0); if (c < 65 || c > 90) break; n = n * 26 + c - 64; } return n - 1; };
+
+  function parseSheet(xml, strings) {
+    const rows = [];
+    const rowRe = /<(?:\w+:)?row\b[^>]*?(?:\/>|>([\s\S]*?)<\/(?:\w+:)?row>)/g;
+    const cellRe = /<(?:\w+:)?c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/(?:\w+:)?c>)/g;
+    let r;
+    while ((r = rowRe.exec(xml))) {
+      const row = [];
+      if (r[1]) {
+        let c, next = 0;
+        cellRe.lastIndex = 0;
+        while ((c = cellRe.exec(r[1]))) {
+          const attrs = c[1], body = c[2] || "";
+          const ref = (attrs.match(/\br="([A-Z]+)\d+"/) || [])[1];
+          const col = ref ? colIndex(ref) : next;
+          next = col + 1;
+          const t = (attrs.match(/\bt="(\w+)"/) || [])[1];
+          const v = (body.match(/<(?:\w+:)?v>([\s\S]*?)<\/(?:\w+:)?v>/) || [])[1];
+          let val = null;
+          if (t === "s") val = v != null ? strings[+v] : null;
+          else if (t === "inlineStr") val = texts(body);
+          else if (t === "str" || t === "e") val = v != null ? unescape(v) : null;
+          else if (t === "b") val = v === "1";
+          else if (v != null) { const n = Number(v); val = Number.isFinite(n) ? n : unescape(v); }
+          row[col] = val;
+        }
+      }
+      for (let i = 0; i < row.length; i++) if (row[i] === undefined) row[i] = null;
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  // bytes: Uint8Array of the .xlsx; inflateRaw: async (Uint8Array) => Uint8Array.
+  async function read(bytes, inflateRaw) {
+    const entries = zipEntries(bytes);
+    const dec = new TextDecoder();
+    const text = async (name) => (entries[name] ? dec.decode(await readEntry(bytes, entries[name], inflateRaw)) : null);
+    const ss = await text("xl/sharedStrings.xml");
+    const strings = [];
+    if (ss) { const re = /<(?:\w+:)?si>([\s\S]*?)<\/(?:\w+:)?si>/g; let m; while ((m = re.exec(ss))) strings.push(texts(m[1])); }
+    const wb = await text("xl/workbook.xml");
+    const rels = await text("xl/_rels/workbook.xml.rels");
+    if (!wb || !rels) throw new Error("not an Excel workbook");
+    const target = {};
+    for (const m of rels.matchAll(/<(?:\w+:)?Relationship\b([^>]*)\/?>/g)) {
+      const id = (m[1].match(/\bId="([^"]+)"/) || [])[1], t = (m[1].match(/\bTarget="([^"]+)"/) || [])[1];
+      if (id && t) target[id] = t.replace(/^\//, "").replace(/^(?!xl\/)/, "xl/");
+    }
+    const sheets = {};
+    for (const m of wb.matchAll(/<(?:\w+:)?sheet\b([^>]*)\/?>/g)) {
+      const name = unescape((m[1].match(/\bname="([^"]*)"/) || [])[1] || "");
+      const rid = (m[1].match(/\br:id="([^"]+)"/) || [])[1];
+      const xml = rid && target[rid] ? await text(target[rid]) : null;
+      if (xml) sheets[name] = parseSheet(xml, strings);
+    }
+    return sheets;
+  }
+
+  return { read };
+});
+</script>
+<script>// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Yong Cong Sin <yongcong.sin@gmail.com>
+// XLSX reader (docs/ARCHITECTURE.md, readers): core/xlsx.js with the browser's raw-deflate
+// decompressor. Works in the browser (self.StatementXlsx, after self.Xlsx) and in Node
+// (module.exports; Node has DecompressionStream too).
+//
+//   accept         the picker's accept tokens for XLSX
+//   accepts(f)     the file is XLSX by name or MIME type
+//   inflateRaw(d)  raw deflate through DecompressionStream("deflate-raw")
+//   read(f)        -> {id: f.name, workbook: {[sheetName]: rows}}; errors propagate unchanged
+//
+// inflateRaw and the Xlsx.read call are moved verbatim from the workbook app (app.js:28-32,
+// :39; the derivation map in docs/MIGRATION.md names it), error texts included.
+(function (root, factory) {
+  if (typeof module === "object" && module.exports) module.exports = factory(require("../xlsx.js"));
+  else root.StatementXlsx = factory(root.Xlsx);
+})(typeof self !== "undefined" ? self : this, function (Xlsx) {
+  "use strict";
+
+  const MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  const accept = `.xlsx,${MIME}`;
+  const accepts = (f) => /\.xlsx$/i.test(f.name) || f.type === MIME;
+
+  async function inflateRaw(data) {
+    if (typeof DecompressionStream === "undefined") throw new Error("this browser can't decompress .xlsx files (no DecompressionStream); try a current Chrome, Edge, Firefox or Safari");
+    const stream = new Blob([data]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+    return new Uint8Array(await new Response(stream).arrayBuffer());
+  }
+
+  async function read(file) {
+    return { id: file.name, workbook: await Xlsx.read(new Uint8Array(await file.arrayBuffer()), inflateRaw) };
+  }
+
+  return { accept, accepts, inflateRaw, read };
+});
+</script>
+<script>// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Yong Cong Sin <yongcong.sin@gmail.com>
+// Export layer: month helpers, balance-only
+// entries with month-end adjustments, starting balances, and the CSV formats.
+// Works on accounts of the shape { kind: "investment" | "cash" | "bank",
+// currency, months: { "YYYY-MM": { monthEnd, opening, closing, fx } }, trades,
+// cash, valuations }. Bank accounts are reconciled, never adjusted.
+(function (root, factory) {
+  if (typeof module === "object" && module.exports) module.exports = factory();
+  else root.StatementExport = factory();
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
+
+  const round2 = (n) => Math.round(n * 100) / 100;
+  const pad = (n) => String(n).padStart(2, "0");
+
+  function monthGaps(sortedMonths) {
+    const gaps = [];
+    for (let i = 1; i < sortedMonths.length; i++) {
+      let [y, m] = sortedMonths[i - 1].split("-").map(Number);
+      for (;;) {
+        m += 1; if (m > 12) { m = 1; y += 1; }
+        const k = `${y}-${pad(m)}`;
+        if (k >= sortedMonths[i]) break;
+        gaps.push(k);
+      }
+    }
+    return gaps;
+  }
+
+  // ---- CSV output ----
+  // Text copied from a statement must not be read as a spreadsheet formula, so
+  // text cells starting with = + - @ get a leading apostrophe (numbers are left alone).
+  const csvCell = (v) => {
+    let s = String(v);
+    if (typeof v === "string" && /^[=+\-@\t\r]/.test(s) && !/^-?[\d.]+$/.test(s)) s = "'" + s;
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const csv = (header, rows) => [header, ...rows].map((r) => r.map(csvCell).join(",")).join("\n") + "\n";
+  const num = (n, dp) => n.toFixed(dp).replace(/\.?0+$/, "");
+  const inRange = (date, from, to) => (!from || date.slice(0, 7) >= from) && (!to || date.slice(0, 7) <= to);
+
+  // Combined files for multi-account imports: one CSV for all portfolios with a
+  // leading "account" column. groups: [{ account, rows }] (rows already filtered).
+  function combinedTradesCsv(groups) {
+    return csv(["account", "date", "ticker", "qty", "price", "currency", "name"],
+      groups.flatMap((g) => g.rows.map((t) => [g.account, t.date, t.ticker, num(t.qty, 6), num(t.price, 6), t.currency, t.name])));
+  }
+
+  // Entries in the internal sign convention; written with inflows positive.
+  function combinedTransactionsCsv(groups) {
+    return csv(["account", "date", "amount", "currency", "name", "notes"],
+      groups.flatMap((g) => g.rows.slice().sort((a, b) => a.date.localeCompare(b.date))
+        .map((c) => [g.account, c.date, (-c.amount).toFixed(2), c.currency, c.name, c.notes || ""])));
+  }
+
+  function tradesCsv(trades, from, to) {
+    return csv(["date", "ticker", "qty", "price", "currency", "name"],
+      trades.filter((t) => inRange(t.date, from, to)).map((t) => [t.date, t.ticker, num(t.qty, 6), num(t.price, 6), t.currency, t.name]));
+  }
+
+  // Amounts written with inflows positive (deposits/dividends +, fees/withdrawals -).
+  function transactionsCsv(cash, from, to) {
+    return csv(["date", "amount", "currency", "name", "notes"],
+      cash.filter((c) => inRange(c.date, from, to)).slice().sort((a, b) => a.date.localeCompare(b.date))
+        .map((c) => [c.date, (-c.amount).toFixed(2), c.currency, c.name, c.notes || ""]));
+  }
+
+  function valuationsCsv(valuations, from, to, currency) {
+    return csv(["date", "balance", "currency"], valuations.filter(([d]) => inRange(d, from, to)).map(([d, v]) => [d, v.toFixed(2), currency]));
+  }
+
+  // Balance-only export: the account's cash entries in its currency plus one
+  // "Returns (month-end adjustment)" entry per month, so that this one CSV puts
+  // the running balance exactly on each statement's closing value, with no
+  // trades or separate balance records needed. Each month builds on the previous
+  // month's closing balance when that statement is loaded, otherwise on the
+  // statement's own opening balance (a statement's opening occasionally differs
+  // from the prior closing by a few dollars). If earlier statements are loaded
+  // but the previous month is missing, or the portfolio first appears after the
+  // earliest loaded statement (it started in a missing month), one "Balance
+  // change not covered by statements" entry bridges the gap so later balances
+  // stay exact; the missing month's individual entries are unknown. Entries in another currency are converted at
+  // the statement's closing exchange rate. Entries use the internal sign
+  // convention (inflow negative), sorted by date.
+  // earliestMonth: the first statement month loaded at all ("YYYY-MM").
+  // withTrades: also list each buy/sell as a zero-amount line ("trade log"); a
+  // trade swaps cash for units inside the portfolio, so the value doesn't change.
+  function adjustedEntries(account, from, to, earliestMonth, withTrades = false) {
+    const out = [];
+    const problems = [];
+    const baseCcy = account.currency;
+    let last = null; // last loaded month before this one: [month, data]
+    for (const [month, m] of Object.entries(account.months).sort(([x], [y]) => x.localeCompare(y))) {
+      const prior = account.months[prevMonth(month)];
+      const lastBefore = last;
+      last = [month, m];
+      if (!inRange(m.monthEnd, from, to)) continue;
+      const base = prior ? prior.closing : m.opening;
+      if (!prior && (lastBefore || (earliestMonth && month > earliestMonth))) {
+        const bridge = round2(m.opening - (lastBefore ? lastBefore[1].closing : 0));
+        if (Math.abs(bridge) >= 0.005) {
+          const missing = [];
+          const stop = lastBefore ? lastBefore[0] : prevMonth(earliestMonth);
+          for (let k = prevMonth(month); k > stop && missing.length < 12; k = prevMonth(k)) missing.unshift(k);
+          out.push({ date: lastDayOf(prevMonth(month)), amount: -bridge, currency: baseCcy, kind: "gap",
+                     name: `Balance change not covered by statements (${missing.join(", ")})` });
+        }
+      }
+      let flows = 0; // account currency, inflow positive
+      for (const c of account.cash.filter((c) => c.date.startsWith(month))) {
+        let entry = c;
+        if (c.currency !== baseCcy) {
+          if (c.currency !== "USD" || !m.fx) { problems.push(`${month}: cannot convert ${c.currency} entry "${c.name}"`); continue; }
+          const usd = -c.amount;
+          entry = { ...c, amount: round2(c.amount * m.fx), currency: baseCcy,
+                    name: `${c.name} (USD ${usd.toFixed(2)} @ ${m.fx})` };
+        }
+        flows += -entry.amount;
+        out.push(entry);
+      }
+      if (withTrades) {
+        for (const t of account.trades.filter((t) => t.date.startsWith(month))) {
+          const value = Math.abs(t.qty) * t.price;
+          out.push({ date: t.date, amount: 0, currency: baseCcy, kind: "trade",
+                     name: `${t.qty > 0 ? "Buy" : "Sell"} ${num(Math.abs(t.qty), 6)} ${t.ticker} @ ${t.currency} ${num(t.price, 6)} (${t.currency} ${value.toFixed(2)})` });
+        }
+      }
+      const adj = round2(m.closing - base - flows);
+      if (account.kind === "bank") {
+        // A bank account must reconcile exactly; a difference means a parsing problem,
+        // unless the month's transactions aren't in any loaded statement (partial).
+        if (Math.abs(adj) >= 0.005) {
+          if (m.partial) out.push({ date: m.monthEnd, amount: -adj, currency: baseCcy, kind: "gap", name: `Balance change not covered by statements (${month})` });
+          else problems.push(`${month}: entries don't add up to the statement balance (off by ${adj.toFixed(2)})`);
+        }
+        continue;
+      }
+      if (Math.abs(adj) >= 0.005) {
+        out.push({ date: m.monthEnd, amount: -adj, currency: baseCcy, kind: "adjustment",
+                   name: `Returns (month-end adjustment, ${month})` });
+      }
+    }
+    // Stable sort: by date, keeping statement order within a day; adjustments last.
+    out.sort((a, b) => a.date.localeCompare(b.date) || (a.kind === "adjustment") - (b.kind === "adjustment"));
+    return { entries: out, problems };
+  }
+
+  function prevMonth(month) {
+    let [y, m] = month.split("-").map(Number);
+    m -= 1;
+    if (!m) { m = 12; y -= 1; }
+    return `${y}-${pad(m)}`;
+  }
+
+  function lastDayOf(month) {
+    const [y, m] = month.split("-").map(Number);
+    return `${month}-${pad(new Date(Date.UTC(y, m, 0)).getUTCDate())}`;
+  }
+
+  // Starting point for an account import: the balance just before the first
+  // exported entry, and that date. Matches the base adjustedEntries builds on:
+  // the previous month's closing, else the last loaded closing before a gap,
+  // else 0 for a portfolio that started in a missing month, else the earliest
+  // statement's opening. Null if the account has no months in range.
+  function openingBalance(account, from, to, earliestMonth, entries) {
+    const months = Object.keys(account.months).sort();
+    const first = months.find((m) => inRange(account.months[m].monthEnd, from, to));
+    if (!first) return null;
+    const earlier = months.filter((m) => m < first);
+    const lastBefore = earlier.length ? account.months[earlier[earlier.length - 1]] : null;
+    const prior = account.months[prevMonth(first)];
+    let balance;
+    if (prior) balance = prior.closing;
+    else if (lastBefore) balance = lastBefore.closing;
+    else if (earliestMonth && first > earliestMonth) balance = 0;
+    else balance = account.months[first].opening;
+    // A month that starts part-way (a download's first row) starts the day before.
+    let date = account.months[first].startDate ? dayBefore(account.months[first].startDate) : lastDayOf(prevMonth(first));
+    const firstEntry = (entries || []).map((e) => e.date).sort()[0];
+    if (firstEntry && firstEntry <= date) date = dayBefore(firstEntry);
+    return { balance: round2(balance), date };
+  }
+
+  function dayBefore(iso) {
+    const d = new Date(`${iso}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() - 1);
+    return d.toISOString().slice(0, 10);
+  }
+
+  // rows: [{ type, name, balance, date }]. Header follows the common
+  // "Account type, Name, Balance, Currency, Balance Date" account-import layout.
+  function accountsCsv(rows) {
+    return csv(["Account type", "Name", "Balance", "Currency", "Balance Date"],
+      rows.map((r) => [r.type, r.name, r.balance.toFixed(2), r.currency, r.date]));
+  }
+
+  function adjustedCsv(account, from, to, earliestMonth, withTrades = false) {
+    return csv(["date", "amount", "currency", "name", "notes"],
+      adjustedEntries(account, from, to, earliestMonth, withTrades).entries.map((c) => [c.date, (-c.amount).toFixed(2), c.currency, c.name, c.notes || ""]));
+  }
+
+  // QIF for one account: an "Opening Balance" record
+  // (balance just before the first entry), then every entry. QIF has no currency
+  // field; import each file into an account of the right currency. Dates are ISO
+  // (YYYY-MM-DD) so they can't be misread as month/day. P = name, M = notes.
+  // start: { balance, date } or null.
+  function qif(entries, start, accountName, type = "Bank") {
+    const clean = (s) => String(s == null ? "" : s).replace(/[\r\n]+/g, " ").trim();
+    const out = [`!Type:${type}`];
+    if (start) out.push(`D${start.date}`, `T${start.balance.toFixed(2)}`, "POpening Balance", `L[${clean(accountName)}]`, "^");
+    for (const e of entries.slice().sort((a, b) => a.date.localeCompare(b.date))) {
+      out.push(`D${e.date}`, `T${(-e.amount).toFixed(2)}`, `P${clean(e.name)}`);
+      if (e.notes) out.push(`M${clean(e.notes)}`);
+      out.push("^");
+    }
+    return out.join("\n") + "\n";
+  }
+
+  return { qif, round2, pad, monthGaps, prevMonth, lastDayOf, dayBefore, inRange, tradesCsv, transactionsCsv, valuationsCsv,
+           adjustedEntries, adjustedCsv, openingBalance, accountsCsv, combinedTradesCsv, combinedTransactionsCsv, csvCell, csv };
+});
+</script>
+<script>self.StatementProvider = {"id":"etoro","app":"custom","inputs":["xlsx"],"multiple":false,"parserGlobal":"EtoroParser","pdf":{"pageTransform":null},"storage":{"modeKey":"etoro-csv-group","configKey":null},"modes":[{"id":"balance","label":"Balance only"},{"id":"month","label":"By kind, monthly"},{"id":"day","label":"By kind, daily"}],"naming":{"accountPrefix":"","brand":"eToro","groupNoun":"accounts","slug":"etoro"}};</script>
+<script>// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Yong Cong Sin <yongcong.sin@gmail.com>
+// eToro account statement (.xlsx) parser. The account is followed by its
+// realized equity: deposits and withdrawals one by one, everything else that
+// changes realized equity (closed positions, dividends, overnight fees, ...)
+// summed per month (or per day) and kind. At each holdings snapshot and at the
+// statement end, a "change in unrealized gain/loss" entry brings the running
+// balance to the total equity (realized equity + open positions' profit/loss).
+// Works in the browser (window.EtoroParser) and in Node (module.exports).
+(function (root, factory) {
+  if (typeof module === "object" && module.exports) module.exports = factory(require("../../core/export.js"));
+  else root.EtoroParser = factory(root.StatementExport);
+})(typeof self !== "undefined" ? self : this, function (E) {
+  "use strict";
+
+  const { round2, pad, lastDayOf } = E;
+  const ZERO = 0.005;
+
+  // Cell helpers: numbers may come as numbers or text ("-" = none).
+  const num = (v) => (typeof v === "number" ? v : v == null || v === "" || v === "-" ? 0 : Number(String(v).replace(/,/g, "")) || 0);
+  const str = (v) => (v == null ? "" : String(v).trim());
+  // Dates: Excel serial numbers or "DD/MM/YYYY[ HH:MM:SS]".
+  function isoDate(v) {
+    if (typeof v === "number") {
+      const d = new Date(Date.UTC(1899, 11, 30) + Math.floor(v) * 864e5);
+      return d.toISOString().slice(0, 10);
+    }
+    const m = str(v).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    return m ? `${m[3]}-${pad(+m[2])}-${pad(+m[1])}` : null;
+  }
+
+  // Rows of a sheet as objects keyed by the header row (the first row whose
+  // first cell is `first`).
+  function table(rows, first) {
+    if (!rows) return null;
+    const h = rows.findIndex((r) => r && str(r[0]) === first);
+    if (h < 0) return null;
+    const head = rows[h].map(str);
+    return rows.slice(h + 1).filter((r) => r && r.some((c) => c != null && c !== "")).map((r) => Object.fromEntries(head.map((k, i) => [k, r[i]])));
+  }
+
+  // "Account Summary": label/value pairs.
+  function summaryOf(rows) {
+    const out = {};
+    for (const r of rows || []) if (r && r[0] != null && r[1] != null) out[str(r[0])] = r[1];
+    return out;
+  }
+
+  // Activity types -> how they are exported. Deposits and withdrawals are kept
+  // one by one; the rest is summed per period and group.
+  const GROUPS = [
+    [/^(deposit|withdraw)/i, null],
+    [/^position closed$/i, "Closed positions profit/loss"],
+    [/^dividend$/i, "Dividends"],
+    [/^(overnight|weekend) (fee|refund)$/i, "Overnight fees and refunds"],
+    [/^interest payment$/i, "Interest"],
+  ];
+  const OTHER = "Fees and adjustments";
+  const COUNT = { "Closed positions profit/loss": ["position closed", "positions closed"], Dividends: ["payment", "payments"],
+                  Interest: ["payment", "payments"], "Overnight fees and refunds": ["entry", "entries"] };
+
+  // workbook: { sheetName: rows }. options.group: "month" (default) or "day".
+  function parseWorkbook(workbook, options = {}) {
+    // "balance": deposits/withdrawals plus one returns row per month; "month"/"day":
+    // summary rows per kind.
+    const mode = ["day", "balance"].includes(options.group) ? options.group : "month";
+    const group = mode === "day" ? "day" : "month";
+    const warnings = [];
+    const summary = summaryOf(workbook["Account Summary"]);
+    const activity = table(workbook["Account Activity"], "Date");
+    if (!activity || !("Realized Equity Change" in (activity[0] || {})))
+      return { error: "not an eToro account statement (no Account Activity sheet)" };
+    const holdings = table(workbook["Holdings"], "Snapshot Date") || [];
+    const closed = table(workbook["Closed Positions"], "Position ID") || [];
+    const currency = str(summary.Currency) || "USD";
+    const start = isoDate(summary["Start Date"]);
+    const end = isoDate(summary["End Date"]) || isoDate(activity[activity.length - 1].Date);
+    const beginRealized = num(summary["Beginning Realized Equity"]);
+    const beginTotal = summary["Beginning Unrealized Equity"] != null ? num(summary["Beginning Unrealized Equity"]) : beginRealized;
+    const endTotal = summary["Ending Unrealized Equity"] != null ? num(summary["Ending Unrealized Equity"]) : null;
+
+    // ---- realized side ----
+    const rows = [];
+    for (const r of activity) {
+      const date = isoDate(r.Date);
+      if (!date) { warnings.push(`activity row without a date: ${str(r.Type)} ${str(r.Details)}`); continue; }
+      rows.push({ date, type: str(r.Type), details: str(r.Details), change: num(r["Realized Equity Change"]), realized: num(r["Realized Equity"]), position: str(r["Position ID"]), amount: num(r.Amount) });
+    }
+    rows.sort((a, b) => a.date.localeCompare(b.date)); // stable: statement order within a day
+    const entries = [];
+    const sums = {}; // period|group -> { date, group, amount, n, types }
+    const types = {};
+    let realized = beginRealized;
+    const realizedAt = []; // [date, realized equity after that date]
+    for (const r of rows) {
+      const t = (types[r.type] = types[r.type] || { count: 0, total: 0 });
+      t.count++; t.total = round2(t.total + r.change);
+      realized = round2(realized + r.change);
+      if (realizedAt.length && realizedAt[realizedAt.length - 1][0] === r.date) realizedAt[realizedAt.length - 1][1] = realized;
+      else realizedAt.push([r.date, realized]);
+      if (Math.abs(r.change) < ZERO) continue;
+      const g = GROUPS.find(([re]) => re.test(r.type));
+      // Internal sign convention: inflow negative.
+      if (g && g[1] === null) { entries.push({ date: r.date, amount: round2(-r.change), currency, name: r.type, notes: r.details, kind: "transfer" }); continue; }
+      const name = g ? g[1] : OTHER;
+      const period = group === "day" ? r.date : r.date.slice(0, 7);
+      const date = group === "day" ? r.date : (end && lastDayOf(period) > end ? end : lastDayOf(period));
+      const s = (sums[`${period}|${name}`] = sums[`${period}|${name}`] || { date, name, period, amount: 0, n: 0, types: {} });
+      s.amount = round2(s.amount + r.change); s.n++;
+      s.types[r.type] = round2((s.types[r.type] || 0) + r.change);
+    }
+    for (const s of Object.values(sums)) {
+      if (Math.abs(s.amount) < ZERO && s.n) continue;
+      const parts = Object.entries(s.types);
+      const notes = parts.length > 1 || s.name === OTHER ? parts.map(([k, v]) => `${k} ${v.toFixed(2)}`).join("; ") : `${s.n} ${(COUNT[s.name] || ["entry", "entries"])[s.n === 1 ? 0 : 1]}`;
+      entries.push({ date: s.date, amount: round2(-s.amount), currency, name: `${s.name} (${s.period})`, notes, kind: s.name === OTHER ? "fee" : "income" });
+    }
+    const lastRealized = rows.length ? rows[rows.length - 1].realized : beginRealized;
+    if (Math.abs(lastRealized - realized) >= ZERO)
+      warnings.push(`Account Activity: realized equity changes add up to ${realized.toFixed(2)}, the last row shows ${lastRealized.toFixed(2)}`);
+    if (summary["Ending Realized Equity"] != null && Math.abs(num(summary["Ending Realized Equity"]) - realized) >= ZERO)
+      warnings.push(`Account Summary shows ending realized equity ${num(summary["Ending Realized Equity"]).toFixed(2)}, Account Activity adds up to ${realized.toFixed(2)}; the ending total equity is used as given, so the difference lands in the last month`);
+    const realizedOn = (d) => { let v = beginRealized; for (const [x, r] of realizedAt) { if (x > d) break; v = r; } return v; };
+
+    // ---- unrealized side: open positions' P/L at each snapshot ----
+    // P/L = direction x (|value| - invested x leverage), where invested is the
+    // amount opened less any part closed by then. "Value in USD" is the
+    // position's market exposure (negative for shorts).
+    const opened = {};
+    for (const r of rows) if (/^open position$/i.test(r.type) && r.position) opened[r.position] = { date: r.date, amount: (opened[r.position] ? opened[r.position].amount : 0) + r.amount };
+    const closes = {};
+    for (const c of closed) { const id = str(c["Position ID"]); (closes[id] = closes[id] || []).push({ date: isoDate(c["Close Date"]), amount: num(c.Amount) }); }
+    const bySnap = {};
+    for (const h of holdings) { const d = isoDate(h["Snapshot Date"]); if (d) (bySnap[d] = bySnap[d] || []).push(h); }
+    const anchors = [];
+    for (const d of Object.keys(bySnap).sort()) {
+      if ((start && d < start) || (end && d > end)) continue;
+      // Monthly rows are dated the month end, so mid-month snapshots can't be matched.
+      if (group === "month" && d !== lastDayOf(d.slice(0, 7))) continue;
+      let pl = 0, approx = 0;
+      for (const h of bySnap[d]) {
+        const id = str(h["Position ID"]);
+        const sign = /^short$/i.test(str(h.Direction)) ? -1 : 1;
+        const lev = num(str(h.Leverage).replace(/^x/i, "")) || 1;
+        const value = Math.abs(num(h["Value in USD"]));
+        const o = opened[id];
+        if (o && o.date <= d) {
+          const out = (closes[id] || []).filter((c) => c.date && c.date <= d).reduce((s, c) => s + c.amount, 0);
+          pl += sign * (value - (o.amount - out) * lev);
+        } else {
+          // Opened before this statement: estimate from the rates.
+          const units = num(h.Units), cur = num(h["Current Rate"]), open = num(h["Open Rate"]);
+          if (units && cur) pl += sign * value * (1 - open / cur);
+          approx++;
+        }
+      }
+      if (approx) warnings.push(`${d} holdings: ${approx} position(s) opened before the statement period; their profit/loss is estimated from open and current rates`);
+      const r = realizedOn(d);
+      anchors.push({ date: d, realized: r, unrealized: round2(pl), total: round2(r + pl), source: `holdings snapshot, ${bySnap[d].length} positions` });
+    }
+    if (end && endTotal != null) {
+      const r = realizedOn(end);
+      const last = anchors[anchors.length - 1];
+      if (last && last.date === end) anchors.pop();
+      anchors.push({ date: end, realized: r, unrealized: round2(endTotal - r), total: endTotal, source: "Account Summary, ending unrealized equity" });
+    }
+    let prevPl = round2(beginTotal - beginRealized);
+    for (const a of anchors) {
+      const change = round2(a.unrealized - prevPl);
+      prevPl = a.unrealized;
+      if (Math.abs(change) < ZERO) continue;
+      entries.push({ date: a.date, amount: round2(-change), currency, name: "Change in unrealized gain/loss",
+                     notes: `Open positions ${a.unrealized >= 0 ? "+" : ""}${a.unrealized.toFixed(2)} on ${a.date} (${a.source})`, kind: "adjustment" });
+    }
+    // Balance only: everything but deposits/withdrawals in one row per month (all
+    // summary and unrealized rows of a month share its date, so anchors still hold).
+    if (mode === "balance") {
+      const keep = entries.filter((e) => e.kind === "transfer");
+      const byMonth = {};
+      for (const e of entries.filter((e) => e.kind !== "transfer")) {
+        const m = e.date.slice(0, 7);
+        const t = (byMonth[m] = byMonth[m] || { date: e.date, amount: 0, parts: [] });
+        t.amount = round2(t.amount + e.amount);
+        t.parts.push(`${e.name.replace(/ \(\d{4}-\d{2}\)$/, "")} ${(-e.amount).toFixed(2)}`);
+      }
+      entries.length = 0;
+      entries.push(...keep);
+      for (const [m, t] of Object.entries(byMonth))
+        entries.push({ date: t.date, amount: t.amount, currency, name: `Returns (month-end adjustment, ${m})`, notes: t.parts.join("; "), kind: "adjustment" });
+    }
+    // By date; within a day statement order, unrealized entries last.
+    entries.sort((a, b) => a.date.localeCompare(b.date) || (a.kind === "adjustment") - (b.kind === "adjustment"));
+
+    const months = [...new Set(rows.map((r) => r.date.slice(0, 7)).concat(anchors.map((a) => a.date.slice(0, 7))))].sort();
+    return {
+      account: { name: "eToro", kind: "investment", currency, beginTotal, entries, anchors },
+      period: { start, end }, months, types, warnings,
+      summary: { deposits: num(summary.Deposits), endRealized: realized, endTotal },
+    };
+  }
+
+  // Balance just before the first entry in range, and that date.
+  function openingBalance(account, from, to) {
+    const inRange = account.entries.filter((e) => E.inRange(e.date, from, to));
+    if (!inRange.length) return null;
+    const first = inRange[0].date;
+    const before = account.entries.filter((e) => e.date < first).reduce((s, e) => s - e.amount, 0);
+    return { balance: round2(account.beginTotal + before), date: E.dayBefore(first) };
+  }
+
+  // Running balance at each anchor date (for checks and the balances CSV).
+  function balanceOn(account, date) {
+    return round2(account.beginTotal + account.entries.filter((e) => e.date <= date).reduce((s, e) => s - e.amount, 0));
+  }
+
+  // Where an activity type goes: null = one by one, else the summary row name.
+  const groupOf = (type) => { const g = GROUPS.find(([re]) => re.test(type)); return g ? g[1] : OTHER; };
+
+  return { parseWorkbook, openingBalance, balanceOn, isoDate, groupOf };
+});
+</script>
+<script>// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Yong Cong Sin <yongcong.sin@gmail.com>
+// File assembly of the custom xlsx app (docs/ARCHITECTURE.md, the custom app's files module):
+// the one account's files, the zip name, and the downloads hook (docs/CONTRACT.md) that lists
+// every download the page offers for a state. Pure: it reads only what ctx returns, and never
+// touches the DOM, storage or the clock. The app's click handlers and the harness hooks
+// (test.js) both call it, so replay sees exactly the files the page offers.
+// Works in the browser (self.EtoroFiles) and in Node (module.exports). The Node branch requires
+// nothing: the composed namespace arrives as ctx.P, so test.js can hand it the old parser or
+// the new one.
+//
+//   const F = EtoroFiles.create({ P, result, range, naming })
+//     P          the composed namespace, Object.assign({}, StatementExport, parser)
+//     result()   the current result ({account, period, months, ...}, never an {error});
+//                non-null whenever a method other than downloads() runs
+//     range()    {from, to}, already swapped so that from <= to
+//     naming     only naming.slug is read
+//   F.span, files, zipName, downloads
+//
+// Derivation. Line numbers are those of the old page's src/app.js at frozen.legacyHead
+// (docs/MIGRATION.md). The moved lines are verbatim, one level deeper inside create, apart from
+// state.result -> result() and the zip name's slug:
+//   span       :67 (range is ctx.range)
+//   files      :70-83; out stays in the order transactions, QIF (spliced in at index 1),
+//              balances, accounts
+//   zipName    the name of :153 with naming.slug for the literal slug, the same string; it uses
+//              span(), so it collapses for one month
+// A new pure function that restates the page's rules (replay checks it against every golden):
+//   downloads  render's card rule, :99-105: one card iff there are entries in range, with one
+//              button per element of out, in out order; the card click of :147-152 downloads
+//              the element of the button's kind (kinds are unique in out) as a text/csv Blob,
+//              the QIF too; then #zip, :106 and :153: enabled iff out is not empty, also with
+//              no card (anchors but no entries in range give out = [balances]), and a zip of
+//              out. [] without a result (#results hidden)
+(function (root, factory) {
+  if (typeof module === "object" && module.exports) module.exports = factory();
+  else root.EtoroFiles = factory();
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
+
+  function create(ctx) {
+    if (!ctx || typeof ctx !== "object") throw new TypeError("EtoroFiles.create needs a context object");
+    const { P, result, range, naming } = ctx;
+    if (!P || typeof P !== "object") throw new TypeError("EtoroFiles.create: ctx.P must be the composed namespace");
+    for (const [k, f] of [["result", result], ["range", range]]) {
+      if (typeof f !== "function") throw new TypeError(`EtoroFiles.create: ctx.${k} must be a function`);
+    }
+    if (!naming || typeof naming !== "object" || typeof naming.slug !== "string") {
+      throw new TypeError("EtoroFiles.create: ctx.naming needs the string slug");
+    }
+
+    const span = () => { const { from, to } = range(); return from === to ? from : `${from}_to_${to}`; };
+
+    // ---------- the account's files ----------
+    function files() {
+      const a = result().account;
+      const { from, to } = range();
+      const entries = a.entries.filter((e) => P.inRange(e.date, from, to));
+      const anchors = a.anchors.filter((x) => P.inRange(x.date, from, to));
+      const out = [];
+      if (entries.length) out.push({ kind: "transactions", label: "Transactions CSV", name: `${a.name} - transactions - ${span()}.csv`, text: P.transactionsCsv(a.entries, from, to), count: entries.length });
+      if (anchors.length) out.push({ kind: "balances", label: "Balances CSV", name: `${a.name} - balances - ${span()}.csv`, text: P.valuationsCsv(anchors.map((x) => [x.date, x.total]), from, to, a.currency), count: anchors.length });
+      const start = P.openingBalance(a, from, to);
+      // One QIF with the starting balance as its "Opening Balance" record.
+      if (entries.length) out.splice(1, 0, { kind: "qif", label: "QIF", name: `${a.name} - ${span()}.qif`, text: P.qif(entries, start, a.name), count: entries.length });
+      if (start) out.push({ kind: "accounts", label: "Accounts CSV", name: `${a.name} accounts - ${span()}.csv`, text: P.accountsCsv([{ type: "Investment", name: a.name, currency: a.currency, ...start }]), count: 1 });
+      return { out, entries, anchors, start };
+    }
+
+    // Download all's name: "<slug>-csv-<span>.zip", collapsed for one month like every name.
+    const zipName = () => `${naming.slug}-csv-${span()}.zip`;
+
+    // ---------- the page's card and #zip, as data ----------
+    const entry = ({ name, text }) => ({ name, text });
+
+    // The downloads hook, in the page driver's click order: the card's buttons, then #zip.
+    function downloads() {
+      if (!result()) return [];
+      const { out, entries } = files();
+      const list = [];
+      if (entries.length) {
+        for (const f of out) list.push({ trigger: "card", account: null, kind: f.kind, name: f.name, type: "text/csv", text: f.text });
+      }
+      list.push(out.length
+        ? { trigger: "zip", account: null, kind: null, name: zipName(), type: "application/zip", files: out.map(entry) }
+        : { trigger: "zip", account: null, kind: null, disabled: true });
+      return list;
+    }
+
+    return { span, files, zipName, downloads };
+  }
+
+  return { create };
+});
+</script>
+<script>// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Yong Cong Sin <yongcong.sin@gmail.com>
+// UI for the eToro statement → CSV converter. Everything runs in the browser.
+//
+// The custom app's controller (docs/CONTRACT.md, custom-app providers), inlined last into the
+// page; it reads self.StatementProvider. Derived from the old page's src/app.js at
+// frozen.legacyHead (docs/MIGRATION.md): its lines in their source order, with their markup,
+// except for what moved into the core modules and the files module and is used from there (old
+// line numbers):
+//   $ :7, monthLabel :66, download :139-146, setBusy, fmtInt and fmtMoney :197-200
+//       -> StatementShell, bound under the same names; esc :198 -> StatementEscape (below)
+//   MODE_KEY :11, loadMode :14-16 and setMode's storage line :19
+//       -> StatementStorage, with D.storage.modeKey and the ids of D.modes
+//   inflateRaw :28-32 and the Xlsx.read call :39 -> (await StatementXlsx.read(file)).workbook
+//   span :67, files :70-83 and the zip name of :153
+//       -> F = EtoroFiles.create(...): F.files(), and F.zipName() (the same string)
+//   CRC, crc32 and zip :155-181 -> StatementZip.zip
+//   the input block :184-194 -> StatementShell.wireInput, with the old #clear body as onClear
+// P is still Object.assign({}, StatementExport, EtoroParser), so the parser's openingBalance
+// shadows the core one (exportOverrides). Rendering (migration step M8): every render builds
+// its markup with StatementEscape.html, which escapes each interpolated value, and assigns it
+// with setHtml, the one innerHTML sink. The template text is the old markup, and each old
+// esc(v) is now a plain ${v}; the explanations of the activity list are template text too. What
+// the old renders printed raw now renders as text: the account currency on the card (:98, :103),
+// the dates of the card, the status line and the checkpoints (:98, :103, :115, :134) and the
+// range's option values (:55).
+(function () {
+  "use strict";
+  const P = Object.assign({}, window.StatementExport, window.EtoroParser);
+  const D = self.StatementProvider;
+  const { $, setBusy, fmtInt, fmtMoney, monthLabel, download } = self.StatementShell;
+  const { html, setHtml } = self.StatementEscape;
+
+  // Detail: "balance" (one returns row per month, the default), or rows by kind per
+  // "month" or "day"; remembered in this browser.
+  const state = { workbook: null, file: null, error: null, result: null, mode: StatementStorage.loadMode(D.storage.modeKey, D.modes.map((m) => m.id)) };
+
+  function setMode(mode) {
+    state.mode = mode;
+    StatementStorage.saveMode(D.storage.modeKey, mode);
+    for (const b of document.querySelectorAll("#mode button")) {
+      b.classList.toggle("on", b.dataset.mode === mode);
+      b.setAttribute("aria-checked", String(b.dataset.mode === mode));
+    }
+    recompute(true);
+  }
+
+  // ---------- reading the .xlsx ----------
+  async function addFiles(fileList) {
+    const file = [...fileList].find((f) => /\.xlsx$/i.test(f.name)) || fileList[0];
+    if (!file) return;
+    setBusy(`Reading ${file.name}…`);
+    try {
+      state.workbook = (await StatementXlsx.read(file)).workbook;
+      state.file = file.name; state.error = null;
+    } catch (e) {
+      state.workbook = null; state.file = file.name; state.error = String(e.message || e);
+    }
+    setBusy("");
+    recompute(false);
+  }
+
+  function recompute(keepRange) {
+    const prev = keepRange ? range() : null;
+    state.result = state.workbook ? P.parseWorkbook(state.workbook, { group: state.mode }) : null;
+    if (state.result && state.result.error) { state.error = state.result.error; state.result = null; }
+    const months = state.result ? state.result.months : [];
+    for (const id of ["from", "to"]) {
+      const sel = $("#" + id), keep = prev && prev[id];
+      setHtml(sel, html`${months.map((m) => html`<option value="${m}">${monthLabel(m)}</option>`)}`);
+      sel.value = keep && months.includes(keep) ? keep : id === "from" ? months[0] || "" : months[months.length - 1] || "";
+    }
+    render();
+  }
+
+  function range() {
+    let from = $("#from").value, to = $("#to").value;
+    if (from && to && from > to) [from, to] = [to, from];
+    return { from, to };
+  }
+
+  // ---------- files ----------
+  const F = EtoroFiles.create({ P, result: () => state.result, range, naming: D.naming });
+
+  // ---------- rendering ----------
+  function render() {
+    const r = state.result;
+    $("#empty").hidden = !!r || !!state.error;
+    $("#results").hidden = !r;
+    renderStatus();
+    if (!r) return;
+    const a = r.account;
+    const { out, entries, anchors, start } = F.files();
+    const n = (k) => entries.filter((e) => e.kind === k).length;
+    const last = anchors[anchors.length - 1];
+    const stats = [["Deposits / withdrawals", n("transfer")], ...(state.mode === "balance" ? [["Monthly adjustments", n("adjustment")]]
+                     : [[state.mode === "day" ? "Daily rows" : "Monthly rows", n("income") + n("fee")], ["Unrealized updates", n("adjustment")]]),
+                   [`Total equity ${last ? last.date : ""}`, last ? `${a.currency} ${fmtMoney(last.total)}` : "–"]];
+    setHtml($("#cards"), entries.length ? html`
+      <article class="card">
+        <header><h3>${a.name}</h3><span class="tag investment">Investment</span></header>
+        <dl>${stats.map(([k, v]) => html`<div><dt>${k}</dt><dd>${typeof v === "number" ? fmtInt(v) : v}</dd></div>`)}</dl>
+        <p class="note">Starts at ${a.currency} ${fmtMoney(start.balance)} on ${start.date}. The balance equals total equity at each holdings snapshot and at the statement end, and follows realized equity in between.</p>
+        <div class="buttons">${out.map((f) => html`<button class="dl" data-kind="${f.kind}">${f.label}</button>`)}</div>
+      </article>` : html`<p class="muted">No activity in the selected months.</p>`);
+    $("#zip").disabled = !out.length;
+    renderDiagnostics(r);
+  }
+
+  function renderStatus() {
+    const el = $("#status");
+    if (state.error) { setHtml(el, html`<p class="warn">${state.file || "File"}: ${state.error}</p>`); return; }
+    const r = state.result;
+    if (!r) { setHtml(el, html``); return; }
+    setHtml(el, html`<p><strong>${state.file}</strong>, ${r.period.start || "?"} to ${r.period.end || "?"}, ${r.account.currency}</p>${
+      r.warnings.map((w) => html`<p class="warn">${w}</p>`)}`);
+  }
+
+  function renderDiagnostics(r) {
+    const how = (type, t) => {
+      if (Math.abs(t.total) < 0.005) return html`not exported (doesn't change realized equity)`;
+      const g = P.groupOf(type);
+      if (g === null) return html`exported one by one`;
+      return state.mode === "balance" ? html`in the monthly returns row` : html`summed into "${g}"`;
+    };
+    const rows = Object.entries(r.types).sort(([, a], [, b]) => b.count - a.count);
+    setHtml($("#diagnostics"), html`
+      <details>
+        <summary>Activity types in the statement</summary>
+        <ul>${rows.map(([type, t]) => html`<li>${type}: ${fmtInt(t.count)} rows, ${fmtMoney(t.total)} ${r.account.currency} <span class="muted">(${how(type, t)})</span></li>`)}</ul>
+      </details>
+      <details>
+        <summary>Total equity checkpoints</summary>
+        <ul>${r.account.anchors.map((x) => html`<li>${x.date}: realized ${fmtMoney(x.realized)} + open positions ${fmtMoney(x.unrealized)} = ${fmtMoney(x.total)} <span class="muted">(${x.source})</span></li>`)}</ul>
+      </details>`);
+  }
+
+  // ---------- downloads ----------
+  $("#cards").addEventListener("click", (e) => {
+    const b = e.target.closest("button.dl");
+    if (!b) return;
+    const f = F.files().out.find((x) => x.kind === b.dataset.kind);
+    if (f) download(f.name, new Blob([f.text], { type: "text/csv" }));
+  });
+  $("#zip").addEventListener("click", () => download(F.zipName(), StatementZip.zip(F.files().out)));
+
+  // ---------- input ----------
+  StatementShell.wireInput({ onFiles: addFiles, onMode: setMode, onRange: render,
+    onClear: () => { state.workbook = null; state.file = null; state.error = null; recompute(false); } });
+
+  setMode(state.mode);
+})();
+</script>
+</body>
+</html>

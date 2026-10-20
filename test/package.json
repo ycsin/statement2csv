@@ -1,0 +1,8 @@
+{
+  "name": "statement2csv-test",
+  "private": true,
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "playwright-core": "1.57.0"
+  }
+}

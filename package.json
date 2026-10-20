@@ -1,0 +1,20 @@
+{
+  "name": "statement2csv",
+  "private": true,
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node build/build.js",
+    "check": "node build/build.js --check",
+    "contract": "node test/contract/run.js --tier node",
+    "contract-browser": "node test/contract/run.js --tier browser",
+    "lint": "node test/lint/run.js",
+    "unit": "node --test \"test/unit/*.test.js\"",
+    "smoke": "node test/smoke/pages.js && node test/smoke/fixtures-golden.js && node test/smoke/injection.js && node test/smoke/parse-error.js",
+    "harness": "node test/harness/run.js",
+    "golden": "node test/golden/run.js",
+    "new-provider": "node tools/new-provider.js"
+  }
+}

@@ -1,0 +1,3 @@
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- Copyright 2026 Yong Cong Sin <yongcong.sin@gmail.com> -->
+<li><strong>QIF</strong> (Balance only and Balance + trade log): the same transactions, including the monthly returns adjustments, as a QIF file per account, starting with an <em>Opening Balance</em> record (the balance just before the first entry), so no separate starting balance or column mapping is needed. Trade lines aren't included (they don't change the balance), and With holdings has no QIF: QIF's bank format can't carry units and prices. QIF has no currency field: import each file into an account of that currency. Dates are <code>YYYY-MM-DD</code>; the name is the payee (<code>P</code>) and the notes the memo (<code>M</code>).</li>

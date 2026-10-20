@@ -1,0 +1,20 @@
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- Copyright 2026 Yong Cong Sin <yongcong.sin@gmail.com> -->
+<template data-slot="h1">eToro statement to CSV and QIF</template>
+<template data-slot="lede">Turns an eToro account statement (the Excel <em>.xlsx</em> download) into a CSV file you can import into a personal finance app: deposits and withdrawals one by one, and the rest (trading profit/loss, dividends, fees, open positions' gain or loss) as one returns row per month, or broken down by kind, so the balance follows your total equity. The file is read in this browser and never uploaded.</template>
+<template data-slot="drop-title">Drop the statement .xlsx here</template>
+<template data-slot="drop-help">or click to choose it. In eToro: Settings, Account, Account statement; pick the whole period you want and download as Excel.</template>
+<template data-slot="empty">No statement yet.</template>
+<template data-slot="mode-label">Detail</template>
+<template data-slot="hint">Most apps don't skip duplicates when importing CSVs, so export only months you haven't imported yet. The account's starting balance for the first exported month is in the Accounts CSV.</template>
+<template data-slot="help-items">
+  <li><strong>Balance only</strong> (default): every deposit and withdrawal, and one <em>Returns (month-end adjustment)</em> row per month with everything else, broken down in the notes.</li>
+  <li><strong>By kind</strong>: every deposit and withdrawal; per month (or per day) one row each for closed positions' profit/loss, dividends, overnight fees and refunds, interest, and other fees and adjustments (index price adjustments, stamp duty, spreads, corrections), with the breakdown in the notes; and a <em>Change in unrealized gain/loss</em> row at each holdings snapshot and at the statement end. The running balance equals total equity (realized equity plus open positions' profit/loss) at those dates, and follows realized equity in between.</li>
+  <li>In every mode the running balance equals total equity at each holdings snapshot (month ends only for monthly rows) and at the statement end, and follows realized equity in between: eToro reports open positions' value only at those dates.</li>
+  <li>Opening a position, copy-trading moves and stock splits don't change realized equity and are not exported.</li>
+  <li>Open positions' profit/loss is worked out from the holdings snapshots: for each position, its value less the amount invested (times leverage for CFDs, and the other way round for shorts). The statement end uses the summary's ending total equity.</li>
+  <li><strong>Balances CSV</strong>: total equity at each of those dates, for apps that record balance updates instead.</li>
+  <li><strong>QIF</strong>: the same transactions as a QIF file, starting with an <em>Opening Balance</em> record (the balance just before the first entry), so no separate starting balance or column mapping is needed. QIF has no currency field: import it into an account of the statement's currency. Dates are <code>YYYY-MM-DD</code>; the name is the payee (<code>P</code>) and the notes the memo (<code>M</code>).</li>
+  <li><strong>Accounts CSV</strong>: <code>Account type, Name, Balance, Currency, Balance Date</code> with the balance just before the first exported entry.</li>
+  <li>Columns: transactions <code>date, amount, currency, name, notes</code> with <em>inflows positive</em>; balances <code>date, balance, currency</code>. Dates are <code>YYYY-MM-DD</code>.</li>
+</template>

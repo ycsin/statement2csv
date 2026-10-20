@@ -1,0 +1,17 @@
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- Copyright 2026 Yong Cong Sin <yongcong.sin@gmail.com> -->
+<template data-slot="h1">Chocolate Finance statement to CSV and QIF</template>
+<template data-slot="lede">Turns Chocolate Finance monthly account statement PDFs into CSV files you can import into a personal finance app, one per currency account (SGD, USD). The PDFs are read in this browser and never uploaded.</template>
+<template data-slot="drop-title">Drop statement PDFs here</template>
+<template data-slot="drop-help">or click to choose files. Add every month you have; you pick which months to export below.</template>
+<template data-slot="mode-label">Funds</template>
+<template data-slot="hint">Most apps don't skip duplicates when importing CSVs, so export only months you haven't imported yet. Each account starts from the balance just before the first exported entry (see the Accounts CSV).</template>
+<template data-slot="config-help">Detected from the statements: one account per currency. Override only if something's off: rename the exported account, change its type, merge it into another account, or leave it out. Saved in this browser.</template>
+<template data-slot="help-items">
+  <li>One <em>Transactions CSV</em> per currency account with every transaction: money added and withdrawn, monthly returns, outperformance returns and currency conversions. Notes carry extra detail, such as the exchange rate and the amount in the other currency for a conversion (each side appears in its own account).</li>
+  <li>Each month is checked against the statement's start and end balance; any mismatch is reported, nothing is adjusted.</li>
+  <li>The <em>Chocolate Managed Account</em> pages (the underlying funds) don't change your account balance, so they aren't exported.</li>
+  <li><strong>QIF</strong>: the same transactions as a QIF file per account, starting with an <em>Opening Balance</em> record (the balance just before the first entry), so no separate starting balance or column mapping is needed. QIF has no currency field: import each file into an account of that currency. Dates are <code>YYYY-MM-DD</code>; the name is the payee (<code>P</code>) and the notes the memo (<code>M</code>).</li>
+  <li><strong>Accounts CSV</strong>: one row per exported account (<code>Account type, Name, Balance, Currency, Balance Date</code>), with the balance just before the first exported entry. <strong>Combined CSV</strong>: all accounts in one file with a leading <code>account</code> column, for multi-account imports; import the Accounts CSV first so the names match.</li>
+  <li>Columns: <code>date, amount, currency, name, notes</code> with <em>inflows positive</em>; dates are <code>YYYY-MM-DD</code>.</li>
+</template>

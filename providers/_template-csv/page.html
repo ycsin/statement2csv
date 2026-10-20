@@ -1,0 +1,15 @@
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- Copyright 2026 Yong Cong Sin <yongcong.sin@gmail.com> -->
+<template data-slot="h1">Example Bank statement to CSV and QIF</template>
+<template data-slot="lede">Turns <em>Example Bank</em> transaction history CSVs into CSV or QIF files you can import into a personal finance app. The files are read in this browser and never uploaded.</template>
+<template data-slot="drop-title">Drop transaction history CSVs here</template>
+<template data-slot="drop-help">or click to choose files. Overlapping exports are fine; you pick which months to export below.</template>
+<template data-slot="mode-label">Funds</template>
+<template data-slot="hint">Most apps don't skip duplicates when importing CSVs, so export only months you haven't imported yet. Each account starts from the balance just before the first exported entry (see the Accounts CSV).</template>
+<template data-slot="config-help">Detected from the exports: one account per account number and currency. Override only if something's off: rename the exported account, change its type, merge it into another account, or leave it out. Saved in this browser.</template>
+<template data-slot="help-items">
+<li>One <em>Transactions CSV</em> per account; every month is checked against the running balance in the export.</li>
+{{> help-qif-short}}
+{{> help-accounts-combined}}
+{{> help-columns-transactions}}
+</template>

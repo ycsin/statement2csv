@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Yong Cong Sin <yongcong.sin@gmail.com>
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+
+# Byte copies of pdf.js, which end without a newline: never touched by an editor.
+[vendor/**]
+insert_final_newline = unset

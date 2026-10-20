@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Yong Cong Sin <yongcong.sin@gmail.com>
+
+node_modules/
+test/node_modules/
+out/
+
+# Never commit statements or anything derived from them (dumps, downloaded
+# CSV/QIF/zip files, screenshots of a page with real data, golden manifests).
+*.pdf
+*.csv
+*.xlsx
+*.xls
+*.qif
+*.zip
+*.png
+*.jpg
+*.json
+!/package.json
+!/test/package.json
+!/test/package-lock.json

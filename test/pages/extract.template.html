@@ -1,0 +1,63 @@
+<!doctype html>
+<!--
+  SPDX-License-Identifier: Apache-2.0
+  Copyright 2026 Yong Cong Sin <yongcong.sin@gmail.com>
+  Test-only extraction page (docs/TESTING.md, browser extraction and Node replay). It holds the
+  production readers and the vendored pdf.js and reads statement files exactly as the pages do:
+  the fixed reader order csv, xlsx, pdf over the declared inputs, each file read by the first
+  reader that accepts it, a reader failure reported as "<message>". test/lib/extract.js builds it
+  with build/page.js into <private-dir>/extract/page.html; it is never published. The scripts
+  token takes the script plan's pieces 1-6 (pdf.js, its worker text, core escape and shell, the
+  three readers and core/xlsx.js) and the canonical serializer of test/lib/canon.js.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="{{csp}}">
+<meta name="referrer" content="no-referrer">
+<title>Statement extraction</title>
+</head>
+<body>
+<input id="picker" type="file" multiple>
+{{scripts}}
+<script>
+(function () {
+  "use strict";
+  const READERS = { csv: self.StatementCsv, xlsx: self.StatementXlsx, pdf: self.StatementPdf };
+  const ORDER = ["csv", "xlsx", "pdf"];
+  // As the apps do at start-up when PDF is a declared input: the worker from #pdf-worker-src.
+  self.StatementPdf.init();
+
+  // read(inputs) -> one entry per file of #picker, in FileList order:
+  //   {name, type, size, kind: null}          no declared reader accepts the file (ignored);
+  //   {name, type, size, kind, text}          text = canon(statement object);
+  //   {name, type, size, kind, error}         the reader's error message.
+  // Statements travel as canonical text, so -0, NaN, the infinities and lone surrogates arrive
+  // in Node unchanged.
+  async function read(inputs) {
+    const declared = ORDER.filter((k) => inputs.includes(k));
+    const out = [];
+    for (const file of document.getElementById("picker").files) {
+      const base = { name: file.name, type: file.type, size: file.size };
+      const kind = declared.find((k) => READERS[k].accepts(file)) || null;
+      if (!kind) {
+        out.push({ ...base, kind: null });
+        continue;
+      }
+      let statement;
+      try {
+        statement = kind === "pdf" ? await READERS.pdf.read(file, null) : await READERS[kind].read(file);
+      } catch (e) {
+        out.push({ ...base, kind, error: e && e.message ? e.message : String(e) });
+        continue;
+      }
+      out.push({ ...base, kind, text: self.__s2cCanon(statement) });
+    }
+    return out;
+  }
+
+  Object.defineProperty(self, "__s2cExtract", { value: Object.freeze({ read }), enumerable: false, configurable: false, writable: false });
+})();
+</script>
+</body>
+</html>

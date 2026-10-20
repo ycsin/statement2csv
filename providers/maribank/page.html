@@ -1,0 +1,19 @@
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- Copyright 2026 Yong Cong Sin <yongcong.sin@gmail.com> -->
+<template data-slot="h1">MariBank statement to CSV and QIF</template>
+<template data-slot="lede">Turns MariBank (Singapore) monthly Deposit and Investment Statement PDFs into CSV files you can import into a personal finance app: one set for your savings account and one per fund. The PDFs are read in this browser and never uploaded.</template>
+<template data-slot="drop-title">Drop statement PDFs here</template>
+<template data-slot="drop-help">or click to choose files. Add every month you have; you pick which months to export below.</template>
+<template data-slot="mode-label">Funds</template>
+<template data-slot="hint">Most apps don't skip duplicates when importing CSVs, so export only months you haven't imported yet. Load the statement for the month before <em>From</em> as well: the monthly adjustment builds on its closing balance.</template>
+<template data-slot="config-help">Detected from the statements: the savings account, and each fund you've held. Override only if something's off: rename the exported account, change its type, merge it into another account, or leave it out. Saved in this browser.</template>
+<template data-slot="help-items">
+  <li><strong>Savings</strong> (bank account): one <em>Transactions CSV</em> with every transaction: name is the counterparty or description (e.g. <em>Buy - Mari Invest</em>, <em>Payout</em>, <em>Interest</em>), notes are the channel and reference. Each month is checked against the statement's starting and ending balance; nothing is adjusted. Monthly interest is dated the last day of the month.</li>
+  <li><strong>Funds, Balance only</strong> (default): one <em>Transactions CSV</em> per fund with money moved in from savings (buys) and out to savings (sells), dividends reinvested into the fund, and one <em>Returns (month-end adjustment)</em> row per month, so the running balance equals the fund's market value on the statement.</li>
+  <li><strong>Funds, Balance + trade log</strong>: the same, plus every buy and sell as a 0.00 line with units and unit price.</li>
+  <li><strong>Funds, With holdings</strong>: a <em>Trades CSV</em> (the fund name is used as the ticker), the cash movements, and a <em>Month-end balances CSV</em> with the market value to record as balance updates.</li>
+  <li>Cash payouts from a fund appear once, in Savings, where the money arrives.</li>
+  <li><strong>QIF</strong> (Balance only and Balance + trade log): the same transactions, including the monthly returns adjustments, as a QIF file per account, starting with an <em>Opening Balance</em> record (the balance just before the first entry), so no separate starting balance or column mapping is needed. Trade lines aren't included (they don't change the balance), and With holdings has no QIF: QIF's bank format can't carry units and prices. QIF has no currency field: import each file into an account of that currency. Dates are <code>YYYY-MM-DD</code>; the name is the payee (<code>P</code>) and the notes the memo (<code>M</code>).</li>
+  <li><strong>Accounts CSV</strong>: one row per exported account (<code>Account type, Name, Balance, Currency, Balance Date</code>), with the balance just before the first exported entry. <strong>Combined CSV</strong>: all accounts in one file with a leading <code>account</code> column, for multi-account imports; import the Accounts CSV first so the names match.</li>
+  <li>Columns: trades <code>date, ticker, qty, price, currency, name</code> (negative qty = sell); transactions <code>date, amount, currency, name, notes</code> with <em>inflows positive</em>; month-end balances <code>date, balance, currency</code>. Dates are <code>YYYY-MM-DD</code>.</li>
+</template>

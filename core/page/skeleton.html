@@ -1,0 +1,58 @@
+<!doctype html>
+<!--
+  SPDX-License-Identifier: Apache-2.0
+  Copyright 2026 Yong Cong Sin <yongcong.sin@gmail.com>
+{{noticeLine}}-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="{{csp}}">
+<meta name="referrer" content="no-referrer">
+<title>{{title}}</title>
+<style>
+{{style}}</style>
+</head>
+<body>
+<main>
+  <h1>{{h1}}</h1>
+  <p class="lede">{{lede}}</p>
+
+  <div id="drop" role="button" tabindex="0" aria-describedby="drop-help">
+    <strong>{{dropTitle}}</strong>
+    <span id="drop-help" class="muted">{{dropHelp}}</span>
+  </div>
+  <input id="picker" type="file" accept="{{accept}}"{{multiple}} hidden>
+  <p id="busy" hidden></p>
+  <div id="status"></div>
+
+  <p id="empty" class="muted">{{empty}}</p>
+
+  <section id="results" hidden>
+    <div class="toolbar">
+      <label>From <select id="from"></select></label>
+      <label>To <select id="to"></select></label>
+      <div class="field">
+        <span id="mode-label">{{modeLabel}}</span>
+        <div id="mode" class="seg" role="radiogroup" aria-labelledby="mode-label">
+{{modeButtons}}        </div>
+      </div>
+      <span class="spacer"></span>
+      <button id="clear">Clear</button>
+{{toolbarButtons}}      <button id="zip" class="primary">Download all (.zip)</button>
+    </div>
+    <p class="hint">{{hint}}</p>
+{{config}}    <div id="cards"></div>
+    <div id="diagnostics"></div>
+
+    <details>
+      <summary>What the files contain</summary>
+      <ul>
+{{helpItems}}
+      </ul>
+    </details>
+{{helpExtra}}  </section>
+</main>
+{{scripts}}
+</body>
+</html>

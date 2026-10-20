@@ -1,0 +1,62 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Yong Cong Sin <yongcong.sin@gmail.com>
+#
+# Deploys the committed dist/ to GitHub Pages on every push to main (docs/ARCHITECTURE.md,
+# output layout and GitHub Pages). The bytes in the repository are the bytes served: the
+# repository's Pages source is "GitHub Actions", so nothing is processed with Jekyll. The deploy
+# waits for the whole of build-check.yml on the same commit, then checks again that dist/ is
+# current. Each action is pinned to the commit of a release (docs/SECURITY.md, CI and deployment).
+name: Pages
+
+on:
+  push:
+    branches: [main]
+
+permissions: {}
+
+# One deployment at a time: a run waits for the one in progress instead of cancelling it, and a
+# newer push's run replaces one that is still waiting (its commit includes the waiting one's).
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  check:
+    uses: ./.github/workflows/build-check.yml
+    permissions:
+      contents: read
+
+  deploy:
+    needs: check
+    # Only main deploys, whatever triggers are added later.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      - name: Check that dist/ is current
+        run: node build/build.js --check
+
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: dist
+
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

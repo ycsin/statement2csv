@@ -1,0 +1,74 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Yong Cong Sin <yongcong.sin@gmail.com>
+#
+# CI (docs/TESTING.md, CI scope): every check that needs neither private data nor the old
+# repositories, on a clean checkout and synthetic data only. No secrets, and the token can only
+# read the repository. A push to main runs this workflow from pages.yml, which deploys only when
+# it passes, so it runs here on pushes to the other branches and on pull requests. Each action is
+# pinned to the commit of a release (docs/SECURITY.md, CI and deployment).
+name: Build check
+
+on:
+  push:
+    branches-ignore: [main]
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  build-check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    env:
+      # Otherwise the browser installer deletes the revisions no installed Playwright uses.
+      PLAYWRIGHT_SKIP_BROWSER_GC: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      - name: Syntax-check every tracked script
+        run: git ls-files -z -- '*.js' | xargs -0 -n 1 node --check
+
+      - name: Check that dist/ is current
+        run: node build/build.js --check
+
+      - name: Contract checks, Node tier
+        run: node test/contract/run.js --tier node
+
+      - name: Lints
+        run: node test/lint/run.js
+
+      - name: Install the pinned test package and browser
+        working-directory: test
+        run: |
+          npm ci --ignore-scripts
+          node node_modules/playwright-core/cli.js install --only-shell chromium
+
+      # After the browser install, so that the tests that need Chrome run. Without Chrome they
+      # would skip, but the browser steps below would fail, so such a skip cannot pass
+      # unnoticed; the tests that need the old repositories skip themselves.
+      - name: Unit and differential tests
+        run: node --test "test/unit/*.test.js"
+
+      - name: Contract checks, browser tier
+        run: node test/contract/run.js --tier browser
+
+      - name: Smoke tests
+        run: npm run smoke
+
+      - name: Harness on every provider's fixtures
+        run: node test/harness/run.js --all-fixtures --browser
+
+      - name: New-provider dry run
+        run: node test/contract/new-provider-dryrun.js
