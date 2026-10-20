@@ -6098,3 +6098,32 @@ and decisions 211-215 are new (decision 214).
 - With this entry in place: `node test/lint/run.js`, 204 files, exit 0 (the six lints 0 findings
   each); `node build/build.js --check`: `dist/` is current (9 files); `npm run contract`: 10
   providers, 0 problems; `npm run unit`: 512 tests, 512 pass, 0 fail, 0 skipped.
+
+### G12 — CI and deployment (2026-10-20)
+
+The public repository `ycsin/statement2csv` was created with one commit, `b58aa7ccbde2`, the tree of
+the WP17 entry (decision 214); the development history moved to the private repository
+`ycsin/statement2csv-history`. Reports are the sha256 prefixes of
+`<private-dir>/reports/<run>.json`.
+
+- Actions settings before the first push: only actions GitHub owns may run, each pinned to a full
+  commit (`sha_pinning_required`), and the default workflow token can only read.
+- CI on GitHub: `build-check.yml` on a branch holding the same commit, while the repository was
+  still private (run 39501323868): every step passed. The repository was then made public, the
+  Pages source set to "GitHub Actions", and the `github-pages` environment, which Pages had given
+  the default branch of that time, set to deploy from `main` only. `pages.yml` on the push of
+  `main` (run 39502266176): the check job and the deploy job passed, every step. The branch was
+  deleted and `main` made the default.
+- What is served: each of the nine pages fetched with `curl` from
+  `https://ycsin.github.io/statement2csv/` (redirects followed, no compression asked for): HTTP
+  200 and the sha256 of its file in `dist/`, the WP15 entry's nine pages.
+- Storage on the deployed site (decision 215): the storage run's checks with the old and the new
+  pages on `https://ycsin.github.io`, playwright-core 1.57.0 and Chrome 143.0.7499.4: PASS, 8 of 8
+  providers ((a), (b), (c), keys and one origin); the 16 keys on the origin at the end each as its
+  owner left it; 32 documents fetched (16 distinct URLs), each with the expected bytes; results
+  digest `dc10f6109ba9e88e`, G10's; report `4fe5f1cebb265166`.
+- The old repositories: the baseline with live pages before and after that run, and once more
+  afterwards (report `aa16cd75a149af55`): 8 old repositories, 4347 manifest entries, 0 problems,
+  0 differences. The session check against the start of M13: 4347 entries, digest
+  `268d8fea635eb05a`, 0 differences; the user config unchanged.
+- Result: G12 passes.

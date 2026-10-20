@@ -140,18 +140,20 @@ render target, with no element or handler added and no violation (docs/TESTING.m
   `id-token: write` to its deploy job alone, which runs only on `main` and only after
   `build-check.yml` has passed on the same commit. No step puts event data (a title, a branch
   name, a commit message) into a shell command, and checkout keeps no credentials
-  (`persist-credentials: false`).
+  (`persist-credentials: false`). The `github-pages` environment accepts deployments from `main`
+  only, and the repository's default workflow token can only read.
 - **Pinned actions.** Only GitHub's own actions are used (checkout, setup-node, configure-pages,
   upload-pages-artifact, deploy-pages), and every action's `uses:` names the full commit of a
   release, with the release's tag in a comment: a tag can be moved to other code, a commit cannot
-  (`pages.yml` calls `build-check.yml` by its path, which runs from the caller's own commit). To
-  update one, take the commit of a release at least two weeks old and change the commit and the
-  comment together.
+  (`pages.yml` calls `build-check.yml` by its path, which runs from the caller's own commit). The
+  repository's Actions settings enforce both: only actions GitHub owns may run, and only pinned to
+  a full commit. To update one, take the commit of a release at least two weeks old and change
+  the commit and the comment together.
 - **What is served is what is committed.** `.gitattributes` keeps `dist/` out of line-ending
   conversion, the deploy checks again that `dist/` is current and uploads it as it is, and the
-  Pages source "GitHub Actions" means no Jekyll processing. After the first deployment,
-  migration gate G12 checks that every served page equals its file in `dist/` by sha256
-  (docs/MIGRATION.md, gate log).
+  Pages source "GitHub Actions" means no Jekyll processing. At the first deployment, migration
+  gate G12 found every served page equal to its file in `dist/` by sha256 (docs/MIGRATION.md,
+  gate log).
 - **The test package and the browser.** `npm ci --ignore-scripts` installs
   `test/package-lock.json` (integrity hashes checked, no install scripts run). Playwright's
   installer then fetches headless-shell revision 1200 (the one playwright-core 1.57.0 pins) and
