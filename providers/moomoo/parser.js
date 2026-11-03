@@ -34,7 +34,7 @@
     "Coupon": { kind: "income" },
     "Fund Corporate Action": { kind: "income" },
     "NRA Withholding Tax": { kind: "fee" },
-    "Asset Adjustment": { kind: "income" },
+    "Asset Adjustment": { kind: "income" }, "Asset Change": { kind: "income" },
   };
 
   // ---- one statement --------------------------------------------------------

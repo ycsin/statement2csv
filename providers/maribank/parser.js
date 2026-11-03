@@ -241,7 +241,7 @@
         const isFirst = !a.firstMonth;
         a.firstMonth = a.firstMonth || month; a.lastMonth = month;
         const prior = Object.values(a.months).pop();
-        const bought = txs.filter((t) => /^BUY/i.test(t.type)).reduce((s, t) => s + (t.units || 0), 0);
+        const bought = txs.filter((t) => /^(BUY|Bonus Unit)/i.test(t.type)).reduce((s, t) => s + (t.units || 0), 0);
         const sold = txs.filter((t) => /^SELL/i.test(t.type)).reduce((s, t) => s + (t.units || 0), 0);
         const units = h ? h.units : 0;
         let opening;
@@ -255,7 +255,7 @@
           if (/^BUY/i.test(t.type)) {
             a.trades.push({ date: t.tradeDate || date, ticker: fund, qty: t.units, price: t.price, currency: t.currency, name: reinvest ? "Buy (dividend reinvested)" : "Buy" });
             if (!reinvest) a.cash.push({ date, amount: -t.amount, currency: t.currency, kind: "transfer", name: "Buy (from savings)", notes: `${t.units} units @ ${t.price}` });
-          } else if (/^SELL/i.test(t.type)) {
+          } else if (/^Bonus Unit/i.test(t.type) && t.units) { /* bonus units: bought with the reward, like a reinvested dividend */ a.trades.push({ date: t.tradeDate || date, ticker: fund, qty: t.units, price: t.price != null ? t.price : (t.amount || 0) / t.units, currency: t.currency, name: "Buy (bonus units)" }); if (t.amount) a.cash.push({ date, amount: -t.amount, currency: t.currency, kind: "income", name: "Bonus unit reward", notes: `${t.units} units` }); } else if (/^SELL/i.test(t.type)) {
             a.trades.push({ date: t.tradeDate || date, ticker: fund, qty: -t.units, price: t.price, currency: t.currency, name: "Sell" });
             a.cash.push({ date, amount: t.amount, currency: t.currency, kind: "transfer", name: "Sell (to savings)", notes: t.units ? `${t.units} units @ ${t.price}` : "" });
           } else if (/^Payout/i.test(t.type) && reinvest) {

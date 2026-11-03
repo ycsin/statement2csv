@@ -208,8 +208,10 @@ module.exports = [
     from: { repo: "maribank2csv", head: "bc79c6919cc9420e149b36fec3ad25e4bbafe2b7", path: "src/parser.js", sha256: "035e01c4e24ab4e062b638ded957d11d088e118c4f4cc44cf0451980585f028d" },
     edits: [
       { line: 7, old: "  if (typeof module === \"object\" && module.exports) module.exports = factory(require(\"./layout.js\"), require(\"./export.js\"));", new: "  if (typeof module === \"object\" && module.exports) module.exports = factory(require(\"./layout.js\"), require(\"../../core/export.js\"));" },
+      { line: 244, old: "        const bought = txs.filter((t) => /^BUY/i.test(t.type)).reduce((s, t) => s + (t.units || 0), 0);", new: "        const bought = txs.filter((t) => /^(BUY|Bonus Unit)/i.test(t.type)).reduce((s, t) => s + (t.units || 0), 0);" },
+      { line: 258, old: "          } else if (/^SELL/i.test(t.type)) {", new: "          } else if (/^Bonus Unit/i.test(t.type) && t.units) { /* bonus units: bought with the reward, like a reinvested dividend */ a.trades.push({ date: t.tradeDate || date, ticker: fund, qty: t.units, price: t.price != null ? t.price : (t.amount || 0) / t.units, currency: t.currency, name: \"Buy (bonus units)\" }); if (t.amount) a.cash.push({ date, amount: -t.amount, currency: t.currency, kind: \"income\", name: \"Bonus unit reward\", notes: `${t.units} units` }); } else if (/^SELL/i.test(t.type)) {" },
     ],
-    sha256: "b1bef05cd7ccdf9777a0adfceed640968eae5a46c4b82c6565a01ae9177341c4",
+    sha256: "0c726251f88945d5ecbe2ee9d95be845e38546dd7b9dce94dbc96077590b55cb",
   },
   {
     path: "providers/maribank/layout.js",
@@ -236,8 +238,9 @@ module.exports = [
     from: { repo: "moomoo2csv", head: "7bd9b9d794643dbfbd9e84bf26a32b71ca5661ef", path: "src/parser.js", sha256: "ad6559330558e8d01064c8249dd246bf7b342ee811dfcad911763beb69434373" },
     edits: [
       { line: 9, old: "  if (typeof module === \"object\" && module.exports) module.exports = factory(require(\"./layout.js\"), require(\"./export.js\"));", new: "  if (typeof module === \"object\" && module.exports) module.exports = factory(require(\"../../core/layout.js\"), require(\"../../core/export.js\"));" },
+      { line: 37, old: "    \"Asset Adjustment\": { kind: \"income\" },", new: "    \"Asset Adjustment\": { kind: \"income\" }, \"Asset Change\": { kind: \"income\" }," },
     ],
-    sha256: "d08ea27054e7a35cb97cc519e33cb4bf3662117205c24ab4d5abc51ebbcc39f2",
+    sha256: "cd58aafdea01204e98109c366c270aaf0f89d4d397ffd8958789a78f691b999f",
   },
   {
     path: "providers/posb/parser.js",

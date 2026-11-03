@@ -8,7 +8,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-W1eZ5vjGgGYyB6xbQu4U7tKkBvp69I9QwVTwwLFWaUY=' 'sha256-57uSHFoPhohBYxKqRDwt+zqYYQ560HrL2HWPZrsv9Qw=' 'sha256-H2XYhmzR6vBkg/miaFjx9aJmxN1BBn3p80RQfxIinvk=' 'sha256-GIPUTiMQYXBmxau6TsAmQkK4V4oJOgM8Dg7UtD1cRpE=' 'sha256-wMag0bpYipvJgH8xqPDyNqpEEq7jkBPSTC6SA8s+NfM=' 'sha256-uTF5b+sM5uAEoySBkLJLbI/r6glliESS+TI3Yc1YgN4=' 'sha256-rDjmSpbjgWHGqEB7mLCnxaTQ3dJwdhgH/zgRD1uVZzE=' 'sha256-zFf0gqj5EpIG+ucEF7P8QNfXhj4chKjvlAdW+Nou4aE=' 'sha256-Xs+NKmDCWW9GA82dVefQZtuOQ3us3O2e9HK8f4fd9AM=' 'sha256-9lPn/uRrt7vOFp6rxuiFwWjUpqIG+kPjRa8BBxd6b6Y=' 'sha256-sb7wXNfM35d3oK387tZAlo6uWkbEuCxlZaAa6RdzQcQ=' 'sha256-qugsXBw27/P+6LEOci/W0MQsXBlp/PdsgrQGBf3BLJc=' blob:; worker-src blob:; style-src 'sha256-vhxI7IXkrBgLQllkf1BvQj7rWL/uvi0X++5+SJi+ANU='; img-src data: blob:; connect-src blob: data:; form-action 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-W1eZ5vjGgGYyB6xbQu4U7tKkBvp69I9QwVTwwLFWaUY=' 'sha256-57uSHFoPhohBYxKqRDwt+zqYYQ560HrL2HWPZrsv9Qw=' 'sha256-H2XYhmzR6vBkg/miaFjx9aJmxN1BBn3p80RQfxIinvk=' 'sha256-GIPUTiMQYXBmxau6TsAmQkK4V4oJOgM8Dg7UtD1cRpE=' 'sha256-wMag0bpYipvJgH8xqPDyNqpEEq7jkBPSTC6SA8s+NfM=' 'sha256-uTF5b+sM5uAEoySBkLJLbI/r6glliESS+TI3Yc1YgN4=' 'sha256-rDjmSpbjgWHGqEB7mLCnxaTQ3dJwdhgH/zgRD1uVZzE=' 'sha256-zFf0gqj5EpIG+ucEF7P8QNfXhj4chKjvlAdW+Nou4aE=' 'sha256-Xs+NKmDCWW9GA82dVefQZtuOQ3us3O2e9HK8f4fd9AM=' 'sha256-9lPn/uRrt7vOFp6rxuiFwWjUpqIG+kPjRa8BBxd6b6Y=' 'sha256-DHJiUfiJRdXsvi7p2VvoReOFRt17nc6U28lgd1kLVcs=' 'sha256-qugsXBw27/P+6LEOci/W0MQsXBlp/PdsgrQGBf3BLJc=' blob:; worker-src blob:; style-src 'sha256-vhxI7IXkrBgLQllkf1BvQj7rWL/uvi0X++5+SJi+ANU='; img-src data: blob:; connect-src blob: data:; form-action 'none'; base-uri 'none'">
 <meta name="referrer" content="no-referrer">
 <title>MariBank Statement Converter</title>
 <style>
@@ -1236,7 +1236,7 @@ code { font-size: 13px; background: var(--accent-soft); padding: 1px 4px; border
         const isFirst = !a.firstMonth;
         a.firstMonth = a.firstMonth || month; a.lastMonth = month;
         const prior = Object.values(a.months).pop();
-        const bought = txs.filter((t) => /^BUY/i.test(t.type)).reduce((s, t) => s + (t.units || 0), 0);
+        const bought = txs.filter((t) => /^(BUY|Bonus Unit)/i.test(t.type)).reduce((s, t) => s + (t.units || 0), 0);
         const sold = txs.filter((t) => /^SELL/i.test(t.type)).reduce((s, t) => s + (t.units || 0), 0);
         const units = h ? h.units : 0;
         let opening;
@@ -1250,7 +1250,7 @@ code { font-size: 13px; background: var(--accent-soft); padding: 1px 4px; border
           if (/^BUY/i.test(t.type)) {
             a.trades.push({ date: t.tradeDate || date, ticker: fund, qty: t.units, price: t.price, currency: t.currency, name: reinvest ? "Buy (dividend reinvested)" : "Buy" });
             if (!reinvest) a.cash.push({ date, amount: -t.amount, currency: t.currency, kind: "transfer", name: "Buy (from savings)", notes: `${t.units} units @ ${t.price}` });
-          } else if (/^SELL/i.test(t.type)) {
+          } else if (/^Bonus Unit/i.test(t.type) && t.units) { /* bonus units: bought with the reward, like a reinvested dividend */ a.trades.push({ date: t.tradeDate || date, ticker: fund, qty: t.units, price: t.price != null ? t.price : (t.amount || 0) / t.units, currency: t.currency, name: "Buy (bonus units)" }); if (t.amount) a.cash.push({ date, amount: -t.amount, currency: t.currency, kind: "income", name: "Bonus unit reward", notes: `${t.units} units` }); } else if (/^SELL/i.test(t.type)) {
             a.trades.push({ date: t.tradeDate || date, ticker: fund, qty: -t.units, price: t.price, currency: t.currency, name: "Sell" });
             a.cash.push({ date, amount: t.amount, currency: t.currency, kind: "transfer", name: "Sell (to savings)", notes: t.units ? `${t.units} units @ ${t.price}` : "" });
           } else if (/^Payout/i.test(t.type) && reinvest) {
