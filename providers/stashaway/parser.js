@@ -108,7 +108,7 @@
             opening: money(tail[0]) || 0,
             // Guaranteed tables have "Maturity Value" (paid out) where others have Fees.
             cashflow: (money(tail[1]) || 0) - (section === "guaranteed" ? money(tail[3]) || 0 : 0),
-            closing: money(tail[4]) || 0,
+            closing: money(tail[4]) || 0, fees: section === "guaranteed" ? 0 : -(money(tail[3]) || 0), // the Fees column ("-$8.65"), as a positive charge
           });
         } else if (rows.length && !s.includes("$") && !/^(Opening|\(|Reporting|PORTFOLIO|Closing|Total|ETF)/.test(s)
                    && !/^\d+$/.test(s) && line.startsWith(" ")) {
@@ -118,12 +118,12 @@
     }
     return rows;
   }
-
+  /* Dividends per ticker from the PORTFOLIO DETAILS tables of one page (the 4th of the 5 amounts): rows before the page's first heading continue the last section (prev), then the first section (own); later sections on the page are not read. */ function readDividends(page, prev, own) { let cur = prev, row = null, headings = 0; for (const line of page.split("\n")) { const s = line.trim(); if (/PORTFOLIO DETAILS \/ \w+ \d{4}/.test(s)) { cur = headings++ ? null : own; row = null; continue; } if (/TRANSACTIONS \/ \w+ \d{4}|FEE CALCULATIONS|APPENDIX/.test(s)) cur = null; if (!cur) continue; const parts = splitCols(s), i = parts.findIndex((t) => MONEY_RE.test(t) || t === "-"); if (i > 0 && parts.length >= i + 5 && parts.slice(i, i + 5).every((t) => MONEY_RE.test(t) || t === "-")) row = { name: parts.slice(0, i).join(" "), div: money(parts[i + 3]) || 0 }; const tk = row && (row.name.match(/\(([A-Z0-9.]+)\)$/) || s.match(/\(([A-Z0-9.]+)\)$/)); if (tk) { cur[tk[1]] = round2((cur[tk[1]] || 0) + row.div); row = null; } } }
   function parseDetailsCurrencies(pages) {
     const out = [];
     for (const page of pages) {
       const m = page.match(/PORTFOLIO DETAILS \/ \w+ \d{4}\s*\n\s*(.+?)\s*\n\s*Reporting Currency: (\w{3})/);
-      if (m) out.push([m[1].trim(), m[2]]);
+      const prev = out.length ? out[out.length - 1][2] : null; if (m) out.push([m[1].trim(), m[2], {}]); if (/Opening Balance\s+Bought/.test(page)) readDividends(page, prev, m ? out[out.length - 1][2] : null);
     }
     return out;
   }
@@ -194,7 +194,7 @@
     // Internal sign convention: inflow negative, outflow positive (CSV output flips it).
     return ["cash", { date: row.date, amount: round2(-sign * amount), currency: amountCcy, name: desc, kind }];
   }
-
+  /* Rows printed without an amount (the Income portfolio's table from May 2026): take it from the summary's Fees or Cashflow column, or the details' Dividends column, when it is the month's only such row for that portfolio (one fee, one deposit or withdrawal, one dividend per ticker) and no other row already holds it; else skip it as before. */ function fillMissing(missing, rows, lineages, month, base, skip) { const groups = {}; for (const m of missing) { const d = m.row.desc, tk = (d.match(/^Dividend received (\S+)$/) || [])[1]; const what = d.startsWith("Management fee") ? "fee" : /^(Deposit|Withdrawal)/.test(d) ? "transfer" : tk ? `dividend ${tk}` : `other ${d}`; (groups[`${m.id}|${what}`] = groups[`${m.id}|${what}`] || []).push({ ...m, what, tk }); } for (const ms of Object.values(groups)) { const { id, row, what, tk } = ms[0]; const own = rows.filter((r) => r.id === id), done = lineages[id].cash.filter((c) => c.date.startsWith(month)); let entry = null; if (ms.length === 1 && what === "fee" && !done.some((c) => c.kind === "fee")) { const fee = round2(own.reduce((s, r) => s + (r.fees || 0), 0)); if (fee > 0) entry = { amount: fee, currency: base, kind: "fee" }; } else if (ms.length === 1 && what === "transfer" && !done.some((c) => c.kind === "transfer")) { const cf = round2(own.reduce((s, r) => s + r.cashflow, 0)); if (row.desc.startsWith("Deposit") ? cf > 0 : cf < 0) entry = { amount: -cf, currency: base, kind: "transfer" }; } else if (ms.length === 1 && tk && !done.some((c) => c.name === row.desc)) { const r = own.find((x) => x.divs && x.divs[tk] > 0); if (r) entry = { amount: -r.divs[tk], currency: r.ccy || base, kind: "income" }; } if (entry) lineages[id].cash.push({ date: row.date, ...entry, name: row.desc }); else for (const m of ms) skip(m.row.date, m.payload, m.id); } }
   // ---- whole statements -----------------------------------------------------
   // Each statement: { id, pages: [text, ...] }; any order. config (optional), per
   // portfolio id: { name, kind: "investment"|"cash", mergeInto: <portfolio id>,
@@ -262,7 +262,7 @@
         const norm = normName(r.name);
         const k = (nth[norm] = (nth[norm] || 0) + 1);
         const d = details.filter(([dn]) => normName(dn) === norm)[k - 1];
-        return { ...r, norm, ccy: d ? d[1] : null, id: null };
+        return { ...r, norm, ccy: d ? d[1] : null, divs: d ? d[2] : {}, id: null };
       });
 
       const used = new Set();
@@ -299,7 +299,7 @@
       }
       delete lineages.tmp;
       prevRows = rows;
-
+      const missing = []; // rows printed without an amount, filled in (or skipped) once every section is read
       // Transactions: match each section to this month's portfolio.
       for (const section of parseTransactions(pages)) {
         const norm = normName(section.name);
@@ -313,10 +313,10 @@
         if (!id || !lineages[id]) { const k = section.name; (unmapped[k] = unmapped[k] || new Set()).add(month); continue; }
         for (const row of section.rows) {
           const [kind, payload] = classify(row, section, base);
-          if (kind === "skip") { skip(row.date, payload, id); continue; }
+          if (kind === "skip") { if (payload.startsWith("no amount: ")) missing.push({ id, row, payload }); else skip(row.date, payload, id); continue; }
           lineages[id][kind === "trade" ? "trades" : "cash"].push(payload);
         }
-      }
+      } fillMissing(missing, rows, lineages, month, base, skip);
     }
 
     // Labels: latest name, made unique with the currency (then the first month).
