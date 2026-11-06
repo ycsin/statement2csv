@@ -227,9 +227,9 @@ test("in Chrome: fixtures/expected.js generated for the new name, which the fixt
   assert.equal(g.providers.length, 1);
 });
 
-test("the dry run's git status rule: only the new folders, their pages and the landing page", () => {
+test("the dry run's git status rule: only the new folders, their pages, the landing page and the README", () => {
   const ids = ["zz-dryrun-pdf", "zz-dryrun-csv"];
-  const good = ["?? providers/zz-dryrun-pdf/provider.js", "?? providers/zz-dryrun-csv/fixtures/expected.js", "?? dist/zz-dryrun-pdf/index.html", "?? dist/zz-dryrun-csv/index.html", " M dist/index.html"];
+  const good = ["?? providers/zz-dryrun-pdf/provider.js", "?? providers/zz-dryrun-csv/fixtures/expected.js", "?? dist/zz-dryrun-pdf/index.html", "?? dist/zz-dryrun-csv/index.html", " M dist/index.html", " M README.md"];
   assert.deepEqual(dryrun.porcelainProblems(good, ids), []);
   const has = (lines, re) => assert.ok(dryrun.porcelainProblems(lines, ids).some((m) => re.test(m)), lines.join("; "));
   has([...good, " M core/export.js"], /git status lists " M core\/export\.js"/);
@@ -238,6 +238,8 @@ test("the dry run's git status rule: only the new folders, their pages and the l
   has(good.filter((l) => !l.includes("dist/zz-dryrun-csv")), /does not list dist\/zz-dryrun-csv\/index\.html/);
   has(good.filter((l) => !l.includes("providers/zz-dryrun-csv")), /lists no file of providers\/zz-dryrun-csv\//);
   has(good.filter((l) => l !== " M dist/index.html"), /does not list dist\/index\.html as modified/);
+  has(good.filter((l) => l !== " M README.md"), /does not list README\.md as modified/);
+  has([...good, "?? README.md"], /git status lists "\?\? README\.md"/);
 });
 
 test("the dry run's steps see CI's empty user config, whatever the developer's says", () => {

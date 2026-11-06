@@ -21,7 +21,8 @@
 //      the two new providers; and the lints (headers, privacy, generic, sinks, invisible) on the
 //      new providers' files and pages;
 //   5. checks that git status --porcelain lists exactly the new providers' files
-//      (providers/zz-dryrun-*/**), their pages (dist/zz-dryrun-*/index.html) and dist/index.html.
+//      (providers/zz-dryrun-*/**), their pages (dist/zz-dryrun-*/index.html), dist/index.html and
+//      README.md (the landing page and the README's provider table list the new providers).
 // The temporary directory is removed afterwards; --keep leaves it and prints where it is. Every
 // step sees what CI sees (stepEnv): its own <private-dir> (S2C_PRIVATE), an empty <old-root>
 // (S2C_OLD_ROOT) and an empty <config-dir> (XDG_CONFIG_HOME) inside the temporary directory, and
@@ -65,26 +66,29 @@ function git(root, ...args) {
 }
 
 // Step 5: every line of `git status --porcelain --untracked-files=all` must be one of the new
-// providers' files (untracked), one of their pages (untracked) or dist/index.html (modified),
-// and each new provider must have its folder and its page.
+// providers' files (untracked), one of their pages (untracked), dist/index.html or README.md
+// (modified); each new provider must have its folder and its page, and both lists must have
+// changed.
 function porcelainProblems(lines, ids) {
   const out = [];
   const alt = ids.map(escRe).join("|");
   const folder = new RegExp(`^providers/(${alt})/[^\\s]+$`), page = new RegExp(`^dist/(${alt})/index\\.html$`);
-  const seen = { folder: new Set(), page: new Set(), landing: false };
+  const seen = { folder: new Set(), page: new Set(), landing: false, readme: false };
   for (const line of lines) {
     const status = line.slice(0, 2), file = line.slice(3);
     let m;
     if ((m = folder.exec(file)) && status === "??") seen.folder.add(m[1]);
     else if ((m = page.exec(file)) && status === "??") seen.page.add(m[1]);
     else if (file === "dist/index.html" && status === " M") seen.landing = true;
-    else out.push(`git status lists ${JSON.stringify(line)}: only the new providers' folders and pages and dist/index.html may change`);
+    else if (file === "README.md" && status === " M") seen.readme = true;
+    else out.push(`git status lists ${JSON.stringify(line)}: only the new providers' folders and pages, dist/index.html and README.md may change`);
   }
   for (const id of ids) {
     if (!seen.folder.has(id)) out.push(`git status lists no file of providers/${id}/`);
     if (!seen.page.has(id)) out.push(`git status does not list dist/${id}/index.html`);
   }
   if (!seen.landing) out.push("git status does not list dist/index.html as modified (the landing page lists the new providers)");
+  if (!seen.readme) out.push("git status does not list README.md as modified (its provider table lists the new providers)");
   return out;
 }
 
@@ -197,7 +201,7 @@ async function runDryRun({ log = () => {}, keep = false } = {}) {
     const lines = git(tree, "status", "--porcelain", "--untracked-files=all").split("\n").filter(Boolean);
     const problems = porcelainProblems(lines, NEW.map((x) => x.id));
     for (const p of problems) log(`  | ${p}`);
-    record("git status: only the new providers and dist/index.html", !problems.length, `${lines.length} changed paths`);
+    record("git status: only the new providers, dist/index.html and README.md", !problems.length, `${lines.length} changed paths`);
   } catch (e) {
     record("dry run", false, describe(e));
   } finally {

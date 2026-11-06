@@ -3,8 +3,9 @@
 // The build (docs/ARCHITECTURE.md, build system). Node >= 22, no dependencies.
 //
 //   node build/build.js                               validate every provider; write dist/<id>/index.html
-//                                                     for the published ones, and dist/index.html
-//   node build/build.js --check                       build in memory; exit 2 if dist/ differs
+//                                                     for the published ones, dist/index.html and the
+//                                                     provider table in README.md
+//   node build/build.js --check                       build in memory; exit 2 if dist/ or that table differs
 //   node build/build.js --only <id>[,<id>...]         build a subset (every provider is still validated)
 //   node build/build.js --include-skeletons --out <d> also build providers/_* and unpublished providers
 //   node build/build.js --out <dir>                   write elsewhere
@@ -14,8 +15,10 @@
 //
 // Pipeline per page: discover -> validate -> plan scripts -> fill the skeleton -> CSP ->
 // verify -> write (or compare). The landing page is rendered and verified the same way
-// (build/csp.js verifyLanding). Every page is built and verified in memory before anything
-// is written, so a failing build never leaves a partial dist/.
+// (build/csp.js verifyLanding). The README's provider table (build/readme.js) is rendered from
+// the same descriptors, only when building into <root>/dist itself and the tree has a README.md.
+// Every page is built and verified in memory before anything is written, so a failing build
+// never leaves a partial dist/.
 //
 // --inject is for tests only and is refused unless --out resolves outside <root>/dist,
 // --check is not given, and the file lies under <root>/test/. It is added after validation.
@@ -30,6 +33,7 @@ const { planScripts, readPiece, scriptTag, REPO } = require("./scripts.js");
 const { fill, pageValues } = require("./page.js");
 const { policy, verify, verifyLanding, DEFAULT_CSP_MODE } = require("./csp.js");
 const { renderLanding, readStyle, styleElementText } = require("./landing.js");
+const { renderReadme } = require("./readme.js");
 
 const USAGE = "usage: node build/build.js [--check] [--only <id>[,<id>...]] [--include-skeletons] [--out <dir>]\n" +
   "                           [--csp legacy|hash] [--root <dir>] [--inject <file>]";
@@ -166,12 +170,25 @@ function build(opts, { log = () => {}, err = () => {} } = {}) {
       failures.push(`providers/${e.folder}: ${x.message}`);
     }
   }
+  const published = entries.filter((e) => !e.skeleton && e.D.publish);
   try {
-    const published = entries.filter((e) => !e.skeleton && e.D.publish);
     files.unshift({ rel: "index.html", content: buildLanding(published, { root, mode: opts.csp }) });
   } catch (x) {
     failures.push(`landing page: ${x.message}`);
   }
+  // The README's provider table: only when building into dist/ itself (never for a test build
+  // elsewhere) and only where the tree has a README.md (stub trees have none).
+  const readmeAbs = path.join(root, "README.md");
+  let readme = null;
+  if (out === dist && fs.existsSync(readmeAbs)) {
+    try {
+      readme = { abs: readmeAbs, content: renderReadme(fs.readFileSync(readmeAbs, "utf8"), published) };
+    } catch (x) {
+      failures.push(x.message);
+    }
+  }
+  const readmeCurrent = () => readme && fs.readFileSync(readme.abs).equals(Buffer.from(readme.content, "utf8"));
+  const what = readme ? `${show(out)} and ${show(readme.abs)} are` : `${show(out)} is`;
   if (failures.length) {
     failures.forEach((m) => err(m));
     err(`build failed: ${failures.length} problem(s); nothing was written`);
@@ -194,12 +211,13 @@ function build(opts, { log = () => {}, err = () => {} } = {}) {
       const want = new Set(files.map((f) => f.rel));
       for (const rel of walkFiles(out)) if (!want.has(rel)) diffs.push(`extra: ${show(path.join(out, rel))}`);
     }
+    if (readme && !readmeCurrent()) diffs.push(`stale: ${show(readme.abs)}`);
     if (diffs.length) {
       diffs.forEach((m) => err(m));
-      err(`${show(out)} is not current: ${diffs.length} difference(s); run node build/build.js`);
+      err(`${what} not current: ${diffs.length} difference(s); run node build/build.js`);
       return { code: 2, files };
     }
-    log(`${show(out)} is current (${files.length} file(s))`);
+    log(`${what} current (${files.length} file(s))`);
     return { code: 0, files };
   }
   for (const f of files) {
@@ -207,6 +225,13 @@ function build(opts, { log = () => {}, err = () => {} } = {}) {
     fs.mkdirSync(path.dirname(abs), { recursive: true });
     fs.writeFileSync(abs, f.content);
     log(`wrote ${show(abs)} (${Math.ceil(Buffer.byteLength(f.content) / 1024)} KiB)`);
+  }
+  if (readme) {
+    if (readmeCurrent()) log(`${show(readme.abs)}: provider table current`);
+    else {
+      fs.writeFileSync(readme.abs, readme.content);
+      log(`wrote ${show(readme.abs)} (provider table)`);
+    }
   }
   return { code: 0, files };
 }

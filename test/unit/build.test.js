@@ -13,7 +13,8 @@ const { planScripts, runtimeScript, guard } = require("../../build/scripts.js");
 const { discover } = require("../../build/discover.js");
 const { verify, verifyLanding, LEGACY_PDF, LEGACY_OTHER } = require("../../build/csp.js");
 const LP = require("../lib/load-provider.js");
-const { makeStubTree, SPDX, TRICKY, umd, parserUmd, PAGE, CONFIG_HELP } = require("./stub-tree.js");
+const { renderReadme, START, END, SITE } = require("../../build/readme.js");
+const { makeStubTree, SPDX, HTML_SPDX, TRICKY, umd, parserUmd, PAGE, CONFIG_HELP } = require("./stub-tree.js");
 
 function cli(args) {
   const out = [], err = [];
@@ -158,6 +159,70 @@ test("--check: missing, stale and extra files exit 2 with their paths", withTree
   const only = cli(["--root", t.root, "--check", "--only", "stub-custom"]);
   assert.equal(only.code, 0, "with --only, only those pages (and the landing page) are compared");
 }));
+
+// A stub README: text around the markers, and a stale table between them.
+const README = (table) => `${HTML_SPDX}\n# Stub\n\nIntro.\n\n${START}\n${table}${END}\n\nAfter.\n`;
+const STALE = "| Provider | Statements | Converter |\n|---|---|---|\n| Old Bank | gone | [x](y) |\n";
+const row = (name, summary, id) => `| ${name} | ${summary} | [${SITE.replace(/^https:\/\//, "")}${id}/](${SITE}${id}/) |`;
+
+test("the README's provider table: written between its markers for the published providers, in the landing page's order", withTree((t) => {
+  t.write({ "README.md": README(STALE) });
+  const r = cli(["--root", t.root]);
+  assert.equal(r.code, 0, r.err.join("\n"));
+  assert.ok(r.out.includes("wrote README.md (provider table)"), r.out.join("\n"));
+  const text = read(t.root, "README.md");
+  assert.ok(text.startsWith(`${HTML_SPDX}\n# Stub\n\nIntro.\n\n${START}\n`) && text.endsWith(`\n${END}\n\nAfter.\n`), "the text around the markers is kept");
+  assert.deepEqual(text.split("\n").filter((l) => l.startsWith("| ") && !l.startsWith("| Provider")), [
+    row("Another Stub", "Synthetic CSV stub", "stub-csv"),
+    row("Stub Bank", "Synthetic PDF stub", "stub-pdf"),
+    row("Stub Sheet", "Synthetic custom stub", "stub-custom"),
+  ], "as on the landing page: by name in code-point order; no skeleton");
+  assert.ok(!text.includes("Old Bank"));
+  const again = cli(["--root", t.root]);
+  assert.deepEqual(again.out.filter((m) => m.includes("README.md")), ["README.md: provider table current"]);
+  t.write({ "providers/stub-csv/provider.js": read(t.root, "providers", "stub-csv", "provider.js").replace("naming:", "publish: false, naming:") });
+  assert.equal(cli(["--root", t.root]).code, 0);
+  assert.ok(!read(t.root, "README.md").includes("Another Stub"), "unpublished: not in the table");
+}));
+
+test("the README's provider table: --check reports it stale, a README without its markers stops the build, --out leaves it alone", withTree((t) => {
+  t.write({ "README.md": README(STALE) });
+  assert.equal(cli(["--root", t.root]).code, 0);
+  const check = cli(["--root", t.root, "--check"]);
+  assert.equal(check.code, 0, check.err.join("\n"));
+  assert.deepEqual(check.out, ["dist and README.md are current (4 file(s))"]);
+  const fresh = read(t.root, "README.md");
+  fs.writeFileSync(path.join(t.root, "README.md"), fresh.replace("| Stub Bank |", "| Stub Bank, renamed |"));
+  const stale = cli(["--root", t.root, "--check"]);
+  assert.equal(stale.code, 2);
+  assert.ok(stale.err.includes("stale: README.md"), stale.err.join("\n"));
+  assert.ok(stale.err.some((m) => /^dist and README\.md are not current: 1 difference/.test(m)), stale.err.join("\n"));
+  assert.equal(cli(["--root", t.root, "--check", "--only", "stub-pdf"]).code, 2, "--only still compares the table");
+  fs.rmSync(path.join(t.root, "dist"), { recursive: true });
+  fs.writeFileSync(path.join(t.root, "README.md"), `${HTML_SPDX}\n# Stub\n`);
+  const none = cli(["--root", t.root]);
+  assert.equal(none.code, 1);
+  assert.ok(none.err.includes(`README.md: no ${START} marker`), none.err.join("\n"));
+  assert.ok(none.err.some((m) => /nothing was written/.test(m)) && !fs.existsSync(path.join(t.root, "dist")), "nothing written");
+  fs.writeFileSync(path.join(t.root, "README.md"), `${README(STALE)}${START}\n`);
+  assert.ok(cli(["--root", t.root]).err.includes(`README.md: ${START} and ${END} must appear once, in that order`));
+  fs.writeFileSync(path.join(t.root, "README.md"), README(STALE));
+  const out = path.join(t.tmp, "out");
+  assert.equal(cli(["--root", t.root, "--out", out]).code, 0);
+  assert.equal(read(t.root, "README.md"), README(STALE), "a build elsewhere never touches the README");
+  assert.deepEqual(cli(["--root", t.root, "--out", out, "--check"]).out, [`${out} is current (4 file(s))`], "and --check elsewhere does not mention it");
+}));
+
+test("renderReadme: escapes pipes, collapses whitespace, keeps the text around the markers", () => {
+  const text = `a\n${START}\nold rows\n${END}\nb\n`;
+  const out = renderReadme(text, [{ id: "p", D: { name: "A|B", summary: " x | y\nz " } }]);
+  assert.equal(out, `a\n${START}\n| Provider | Statements | Converter |\n|---|---|---|\n${row("A\\|B", "x \\| y z", "p")}\n${END}\nb\n`);
+  assert.equal(renderReadme(text, []), `a\n${START}\n| Provider | Statements | Converter |\n|---|---|---|\n${END}\nb\n`);
+  assert.throws(() => renderReadme(`${END}\n${START}\n`, []), /must appear once, in that order/);
+  assert.throws(() => renderReadme(`${START}\n${END}\n${END}\n`, []), /must appear once, in that order/);
+  assert.throws(() => renderReadme("none", []), /no <!-- providers:start --> marker/);
+  assert.throws(() => renderReadme(`${START}\n`, []), /no <!-- providers:end --> marker/);
+});
 
 test("--only builds a subset and still validates every provider", withTree((t) => {
   const out = path.join(t.tmp, "out");

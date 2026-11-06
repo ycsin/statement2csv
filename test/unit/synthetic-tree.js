@@ -500,7 +500,7 @@ function files() {
   const fixtureNote = `${MARKER}: synthetic fixtures (docs/TESTING.md, fixture spec format).`;
   return {
     "NOTICE": "synthetic tree\nCopyright 2026 Yong Cong Sin <yongcong.sin@gmail.com>\n",
-    "README.md": `${HTML_SPDX}\n# A synthetic tree\n\nBuilt by the unit tests.\n`,
+    "README.md": `${HTML_SPDX}\n# A synthetic tree\n\nBuilt by the unit tests.\n\n<!-- providers:start -->\n<!-- providers:end -->\n`,
     "package.json": `${JSON.stringify({ name: "synthetic-tree", private: true, license: "Apache-2.0" }, null, 2)}\n`,
     "test/contract/provenance.js": `${SPDX}// No pinned files in the synthetic tree.\nmodule.exports = [];\n`,
 

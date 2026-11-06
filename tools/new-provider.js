@@ -30,10 +30,10 @@
 //     the scaffold stops after (e) with that message, and the provider has no expected.js yet
 //     (the fixtures golden then reports "run --update"; it never compares against stale data).
 //
-// Nothing outside providers/<id>/ is written; dist/ is left to node build/build.js. --root
-// scaffolds into another tree (tests); the default is this repository. Exit status: 0 done, 1
-// refused or not complete (the message says which; after a failure in (f) the folder stays,
-// without fixtures/expected.js), 2 usage.
+// Nothing outside providers/<id>/ is written; dist/ and the README's provider table are left to
+// node build/build.js. --root scaffolds into another tree (tests); the default is this
+// repository. Exit status: 0 done, 1 refused or not complete (the message says which; after a
+// failure in (f) the folder stays, without fixtures/expected.js), 2 usage.
 //
 //   scaffold({root, id, name, from, log}) -> {code, dir, expected: "written" | "missing" | null}
 "use strict";

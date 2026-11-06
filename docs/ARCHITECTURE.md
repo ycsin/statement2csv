@@ -317,9 +317,9 @@ The build runs on Node 22 or later and has no npm dependencies (only `fs`, `path
 `vm`).
 
 ```
-node build/build.js                               # validate every provider; write dist/<id>/index.html for published ones + dist/index.html
-node build/build.js --check                       # build in memory; exit 2 if dist/ differs (missing, stale or extra files), listing paths
-node build/build.js --only <id>[,<id>…]           # build a subset (all providers are still validated; dist/index.html rewritten)
+node build/build.js                               # validate every provider; write dist/<id>/index.html for published ones + dist/index.html, and the provider table in README.md
+node build/build.js --check                       # build in memory; exit 2 if dist/ (missing, stale or extra files) or the README's table differs, listing paths
+node build/build.js --only <id>[,<id>…]           # build a subset (all providers are still validated; dist/index.html and the README's table rewritten)
 node build/build.js --include-skeletons --out <d> # also build providers/_* and unpublished providers (tests only; never into dist/)
 node build/build.js --out <dir>                   # write elsewhere
 node build/build.js --csp legacy|hash             # the CSP mode; default DEFAULT_CSP_MODE in build/csp.js ("hash")
@@ -419,6 +419,11 @@ browser's tokenizer reads it, must carry no inline handler; the landing page has
 - `dist/index.html` is the landing page: no script, the heading "Statement converters, in your
   browser", and one `<li><a href="<id>/">name</a> — summary</li>` per published provider, sorted
   by `name` in code-point order.
+- `README.md` holds the same list as a table between `<!-- providers:start -->` and
+  `<!-- providers:end -->`: `build/readme.js` renders it from the same descriptors in the same
+  order, with each page's address on the site, and the build writes it only when it builds into
+  the tree's own `dist/` (not with `--out`) and the tree has a `README.md`. A README without
+  exactly one marker pair stops the build; `--check` reports a stale table like a stale page.
 - `dist/` is committed, and `node build/build.js --check` proves it current. On every push to
   `main`, `.github/workflows/pages.yml` deploys the committed `dist/` to GitHub Pages once CI
   (`build-check.yml`) has passed on that commit and `--check` passes again. The repository's

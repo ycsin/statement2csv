@@ -120,7 +120,7 @@ that need the old repositories skip themselves without them (as in CI).
 | `differential.test.js` | core modules against the frozen copies of old code in `test/legacy/` (export A, B and C, layout L3, the old ZIP writer and storage functions), 10 000 seeded cases per comparison |
 | `files.test.js`, `assemble.test.js`, `escape.test.js`, `zip.test.js`, `readers.test.js` | the core modules: file names and spans, Download all = `allFiles()`, the downloads hook; merges, cycles, code-point order; escaping and forged Html; the ZIP writer; the readers, BOM stripping and every `sheets` fixture of the tree read back exactly |
 | `descriptor.test.js`, `result.test.js`, `constants.test.js`, `callgraph.test.js`, `headers.test.js` | the contract code: defaults, precedence and validation; `checkResult`; the app's literal constants equal `core/contract/constants.js`; the derived export call graph; expected headers |
-| `page.test.js`, `csp.test.js`, `build.test.js`, `legacy-repro.test.js` | templating and the slot lint; the CSP modes and `verify` (each defect caught, and blocked by Chrome; a fault in `policy()` caught; tags read as Chrome's parser reads them); the build on stub trees (`--root`, `--check`, `--only`, `--inject`); gate G2, the old pages rebuilt byte for byte from each old `build.py` (skipped without the old repositories) |
+| `page.test.js`, `csp.test.js`, `build.test.js`, `legacy-repro.test.js` | templating and the slot lint; the CSP modes and `verify` (each defect caught, and blocked by Chrome; a fault in `policy()` caught; tags read as Chrome's parser reads them); the build on stub trees (`--root`, `--check`, `--only`, `--inject`, the README's provider table); gate G2, the old pages rebuilt byte for byte from each old `build.py` (skipped without the old repositories) |
 | `contract.test.js`, `injection.test.js`, `parse-error.test.js`, `harness.test.js`, `storage-compat.test.js` | the contract checks, the smokes, the harness and the storage-compatibility run on the synthetic tree of `test/unit/synthetic-tree.js`: everything passes, and every check has a failing sample |
 | `statement-app.test.js`, `etoro-files.test.js` | the statement app against the seven old apps it replaces (skipped without the old repositories); the custom app's files module and hooks |
 | `extract.test.js`, `replay.test.js`, `golden.test.js`, `provenance.test.js`, `testlib.test.js` | the test library, extraction and replay, the golden harness and its waivers and canaries, the provenance tool |
@@ -250,8 +250,8 @@ the dry run's own process, so your untracked denylist and app list still apply t
    --browser` (both templates and the new providers included), the pages smoke, the fixtures
    golden (no `--update`) and the injection smoke for the two new providers, and the lints on the
    new providers' files and pages; each step must also print the lines that show it checked them;
-5. `git status --porcelain` must list exactly the new providers' files, `dist/zz-dryrun-*/index.html`
-   and a modified `dist/index.html`.
+5. `git status --porcelain` must list exactly the new providers' files, `dist/zz-dryrun-*/index.html`,
+   and a modified `dist/index.html` and `README.md`.
 
 ## Generic harness
 

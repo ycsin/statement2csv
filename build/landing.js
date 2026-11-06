@@ -5,6 +5,8 @@
 //
 //   renderLanding(providers, {root, mode}) -> html
 //     providers: [{id, D}] (normalized descriptors; the caller passes the published ones).
+//   byName(a, b)   that order: by name in code-point order, then by id; the README's provider
+//                  table (build/readme.js) lists the same providers in the same order
 "use strict";
 
 const fs = require("fs");
@@ -13,12 +15,14 @@ const { fill, esc } = require("./page.js");
 const { landingPolicy } = require("./csp.js");
 const { guard } = require("./scripts.js");
 
+const byName = (a, b) => (a.D.name < b.D.name ? -1 : a.D.name > b.D.name ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+
 function renderLanding(providers, { root, mode } = {}) {
   const pageDir = path.join(root, "core", "page");
   const skeleton = fs.readFileSync(path.join(pageDir, "landing.html"), "utf8");
   const style = readStyle(path.join(pageDir, "style.css"));
   const items = [...providers]
-    .sort((a, b) => (a.D.name < b.D.name ? -1 : a.D.name > b.D.name ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+    .sort(byName)
     .map((p) => `    <li><a href="${esc(p.id)}/">${esc(p.D.name)}</a> — ${esc(p.D.summary)}</li>\n`)
     .join("");
   const styleText = styleElementText(skeleton, style);
@@ -43,4 +47,4 @@ function styleElementText(skeleton, style) {
   return parts[0] + style + parts[1];
 }
 
-module.exports = { renderLanding, readStyle, styleElementText };
+module.exports = { renderLanding, readStyle, styleElementText, byName };

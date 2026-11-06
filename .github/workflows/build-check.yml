@@ -40,7 +40,7 @@ jobs:
       - name: Syntax-check every tracked script
         run: git ls-files -z -- '*.js' | xargs -0 -n 1 node --check
 
-      - name: Check that dist/ is current
+      - name: Check that dist/ and the README's provider table are current
         run: node build/build.js --check
 
       - name: Contract checks, Node tier

@@ -278,7 +278,8 @@ nothing would check what they make of a statement.
 node build/build.js
 ```
 
-It writes `dist/<id>/index.html` and refreshes `dist/index.html`. Open
+It writes `dist/<id>/index.html`, refreshes `dist/index.html` and adds your row to the provider
+table in `README.md`. Open
 `dist/<id>/index.html` in a browser (it works from disk), load your statements, and read the
 cards, the status and the diagnostics. Then run the harness on the built page too:
 
@@ -297,9 +298,8 @@ node test/harness/run.js --all-fixtures --browser
 node test/contract/new-provider-dryrun.js
 ```
 
-Add the provider's row to the list in `README.md` (its name, its `summary` and its page's
-address), then commit `providers/<id>/` (with `frozen.js` and `fixtures/expected.js`),
-`dist/<id>/index.html`, `dist/index.html` and `README.md`. Never commit a statement.
+Commit `providers/<id>/` (with `frozen.js` and `fixtures/expected.js`), `dist/<id>/index.html`,
+`dist/index.html` and `README.md` (the build wrote your row). Never commit a statement.
 
 CI (`.github/workflows/build-check.yml`) runs the same checks on every push. A push to `main`
 publishes: `pages.yml` deploys the committed `dist/`, your page and its link on the landing page
