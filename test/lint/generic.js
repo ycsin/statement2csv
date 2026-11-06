@@ -14,12 +14,13 @@
 //                  this scope: its verbatim copies keep the old wording in comments.
 //   provider-name  Shared code, tests and top-level texts (core/**, build/**, tools/**, test/**
 //                  apart from test/legacy/** and the pin list test/contract/provenance.js,
-//                  .github/**, README.md, NOTICE) do not contain the name, brand, trimmed
+//                  .github/**, NOTICE) do not contain the name, brand, trimmed
 //                  account prefix or legacyRepo of any provider that is not a skeleton, as a
 //                  whole word, case-sensitively. Ids are not matched (an id can be an ordinary
 //                  word). This is what keeps every test provider-neutral; shared code cites old
 //                  code through the derivation map in docs/MIGRATION.md. providers/, docs/,
-//                  test/legacy/ and dist/ are outside this scope.
+//                  README.md (it lists the providers), test/legacy/ and dist/ are outside this
+//                  scope.
 // Findings never quote an app-list entry (it is untracked): it is named by its number only.
 "use strict";
 
@@ -35,7 +36,7 @@ function inPagesAndDocs(rel) {
 }
 
 function inShared(rel) {
-  if (rel === "README.md" || rel === "NOTICE") return true;
+  if (rel === "NOTICE") return true;
   if (rel.startsWith("test/legacy/") || rel === "test/contract/provenance.js") return false;
   return /^(core|build|tools|test|\.github)\//.test(rel);
 }

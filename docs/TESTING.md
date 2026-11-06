@@ -95,10 +95,10 @@ reads `<file>:<line>:<col> [<lint>/<rule>] <message>` and never quotes private t
   first word of the old QIF expansion (in any case) nor any entry of the untracked app list
   (`$S2C_APPS`, default `<config-dir>/apps.txt`). Shared code, tests and the top-level texts
   (`core/`, `build/`, `tools/`, `test/` apart from `test/legacy/` and the pin list, `.github/`,
-  `README.md`, `NOTICE`) do not contain the name, brand, trimmed account prefix or `legacyRepo` of any provider
+  `NOTICE`) do not contain the name, brand, trimmed account prefix or `legacyRepo` of any provider
   that is not a skeleton, as a whole word, case-sensitively: no test file names a provider, and a
   provider's name must not be a word that shared code uses. `docs/` may use provider names as
-  examples.
+  examples, and `README.md` lists the providers.
 - **sinks** (`core/**`, `providers/**`): the one innerHTML sink, the banned names, clock and
   randomness purity and the `localeCompare` rule (docs/SECURITY.md).
 - **sentinels**: a pin may declare `sentinels: [{line, contains}]`, text that must stay on that

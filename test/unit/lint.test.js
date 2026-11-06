@@ -209,11 +209,10 @@ test("generic rule provider-name: name, brand, trimmed prefix and legacyRepo fai
     "build/b.js": `${SPDX}// AcmeBrand files\n`,
     "tools/c.js": `${SPDX}// prefix AcmeCo\n`,
     "test/d.js": `${SPDX}// from acme2csv\n`,
-    "README.md": `${HTML}AcmeBrand\n`,
     ".github/workflows/ci.yml": `${HASH}# acme2csv\n`,
   });
   assert.deepEqual(rules(generic.check(root, { files: listed(root), apps: null })).sort(),
-    ["build/b.js:provider-name", "core/a.js:provider-name", "test/d.js:provider-name", "tools/c.js:provider-name", "README.md:provider-name", ".github/workflows/ci.yml:provider-name"].sort());
+    ["build/b.js:provider-name", "core/a.js:provider-name", "test/d.js:provider-name", "tools/c.js:provider-name", ".github/workflows/ci.yml:provider-name"].sort());
 });
 
 test("generic rule provider-name passes: ids, other words, skeleton placeholders, and the exempt places", () => {
@@ -222,6 +221,7 @@ test("generic rule provider-name passes: ids, other words, skeleton placeholders
     "test/legacy/l.js": `${SPDX}// copied from acme2csv\n`,
     "test/contract/provenance.js": `${SPDX}module.exports = []; // acme2csv\n`,
     "docs/X.md": `${HTML}AcmeBrand, as an example\n`,
+    "README.md": `${HTML}| Acme Savings | AcmeBrand statements | acme2csv |\n`,
     "providers/acme/page.html": `${HTML}<template data-slot="h1">Acme Savings</template>\n`,
     "dist/acme/index.html": "<h1>Acme Savings</h1>\n",
   });

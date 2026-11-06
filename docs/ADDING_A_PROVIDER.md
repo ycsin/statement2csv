@@ -37,7 +37,7 @@ stands, never the real path.
   and `. , & ' ( ) + -`, at most 60 characters. It is the brand in file names (`<Name> accounts -
   ….csv`) and the landing page's link text. Shared code must not already contain it as a whole
   word or phrase (the generic lint checks every provider name against `core/`, `build/`,
-  `tools/`, `test/`, `README.md` and `NOTICE`), so a plain `Bank` would not do.
+  `tools/`, `test/` and `NOTICE`), so a plain `Bank` would not do.
 - **Pick the template.** `--from pdf` for PDF statements (`providers/_template-pdf/`: a monthly
   statement with a section per account, read as positioned text lines); `--from csv` for CSV
   exports (`providers/_template-csv/`: a transaction history with a running balance). For
@@ -223,7 +223,8 @@ module.exports = {
   `{{> help-qif-short}}`, `{{> help-accounts-combined}}` and `{{> help-columns-transactions}}` (or
   `help-qif-long` and `help-columns-full` when your accounts have trades). Name no finance app:
   the pages say "a personal finance app".
-- **`provider.js`:** replace `summary: "TODO"` with the one line the landing page shows. Override
+- **`provider.js`:** replace `summary: "TODO"` with the one line the landing page and the
+  provider list in `README.md` show. Override
   `ui.*` only where needed (docs/CONTRACT.md, descriptor): `ui.skipLabels` for your skipped-row
   categories (it replaces the default labels as a whole, so repeat the ones you still use),
   `ui.text.gapWarning` (by default it asks for "the missing PDF"), `ui.diagnostics:
@@ -296,8 +297,9 @@ node test/harness/run.js --all-fixtures --browser
 node test/contract/new-provider-dryrun.js
 ```
 
-Commit `providers/<id>/` (with `frozen.js` and `fixtures/expected.js`), `dist/<id>/index.html`
-and `dist/index.html`. Never commit a statement.
+Add the provider's row to the list in `README.md` (its name, its `summary` and its page's
+address), then commit `providers/<id>/` (with `frozen.js` and `fixtures/expected.js`),
+`dist/<id>/index.html`, `dist/index.html` and `README.md`. Never commit a statement.
 
 CI (`.github/workflows/build-check.yml`) runs the same checks on every push. A push to `main`
 publishes: `pages.yml` deploys the committed `dist/`, your page and its link on the landing page
