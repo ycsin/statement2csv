@@ -255,8 +255,11 @@ module.exports = [
     from: { repo: "posb2csv", head: "93c1778d6ec29d436d426889e4f5a430c53bb05f", path: "src/parser.js", sha256: "af6853febc881bdfc83b1157e5feec00e9827dea41306d652fe699d83d22738d" },
     edits: [
       { line: 11, old: "  if (typeof module === \"object\" && module.exports) module.exports = factory(require(\"./layout.js\"), require(\"./export.js\"));", new: "  if (typeof module === \"object\" && module.exports) module.exports = factory(require(\"../../core/layout.js\"), require(\"../../core/export.js\"));" },
+      { line: 19, old: "  const NUM_RE = /^[\\d,]+\\.\\d{2}$/;", new: "  const NUM_RE = /^[\\d,]+\\.\\d{2}-?$/; // an overdrawn balance is printed with a trailing minus (\"1,234.56-\")" },
+      { line: 20, old: "  const num = (s) => parseFloat(String(s).replace(/,/g, \"\"));", new: "  const num = (s) => { const t = String(s).replace(/,/g, \"\"); return t.endsWith(\"-\") ? -parseFloat(t) : parseFloat(t); };" },
+      { line: 95, old: "      const amounts = (items) => items.filter((it) => NUM_RE.test(it.s) || /^[A-Z]{3} [\\d,]+\\.\\d{2}$/.test(it.s));", new: "      const amounts = (items) => items.filter((it) => NUM_RE.test(it.s) || /^[A-Z]{3} [\\d,]+\\.\\d{2}-?$/.test(it.s));" },
     ],
-    sha256: "e5c06148e222debf93adce17423d0a95b718b0354c96161c66d6aa39bf7808e5",
+    sha256: "90fbe7d8db7a1847a3779674879d5047f45ed545ddc3bedb19ae38ec95c8a12c",
     sentinels: [{ line: 243, contains: "\uFEFF" }],
   },
   {

@@ -8,7 +8,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-W1eZ5vjGgGYyB6xbQu4U7tKkBvp69I9QwVTwwLFWaUY=' 'sha256-57uSHFoPhohBYxKqRDwt+zqYYQ560HrL2HWPZrsv9Qw=' 'sha256-H2XYhmzR6vBkg/miaFjx9aJmxN1BBn3p80RQfxIinvk=' 'sha256-GIPUTiMQYXBmxau6TsAmQkK4V4oJOgM8Dg7UtD1cRpE=' 'sha256-wMag0bpYipvJgH8xqPDyNqpEEq7jkBPSTC6SA8s+NfM=' 'sha256-aTIR5/zmRGk9UqdNzUXgRJGKALSEXIAZsZGSSFfL8ik=' 'sha256-uTF5b+sM5uAEoySBkLJLbI/r6glliESS+TI3Yc1YgN4=' 'sha256-j6utZtRCagKjxT02cEEu9VN+7Mn/NHtiE8uUEdRiJgI=' 'sha256-rDjmSpbjgWHGqEB7mLCnxaTQ3dJwdhgH/zgRD1uVZzE=' 'sha256-zFf0gqj5EpIG+ucEF7P8QNfXhj4chKjvlAdW+Nou4aE=' 'sha256-L6W+tXPWlYNZGQuLuc1syRx0sKFlrlpZDJKd0D2SP0M=' 'sha256-5cBhSOIi3r+Trc4XQj0KlbcYsDVMlhYcZtaqOb94COU=' 'sha256-qugsXBw27/P+6LEOci/W0MQsXBlp/PdsgrQGBf3BLJc=' blob:; worker-src blob:; style-src 'sha256-vhxI7IXkrBgLQllkf1BvQj7rWL/uvi0X++5+SJi+ANU='; img-src data: blob:; connect-src blob: data:; form-action 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-W1eZ5vjGgGYyB6xbQu4U7tKkBvp69I9QwVTwwLFWaUY=' 'sha256-57uSHFoPhohBYxKqRDwt+zqYYQ560HrL2HWPZrsv9Qw=' 'sha256-H2XYhmzR6vBkg/miaFjx9aJmxN1BBn3p80RQfxIinvk=' 'sha256-GIPUTiMQYXBmxau6TsAmQkK4V4oJOgM8Dg7UtD1cRpE=' 'sha256-wMag0bpYipvJgH8xqPDyNqpEEq7jkBPSTC6SA8s+NfM=' 'sha256-aTIR5/zmRGk9UqdNzUXgRJGKALSEXIAZsZGSSFfL8ik=' 'sha256-uTF5b+sM5uAEoySBkLJLbI/r6glliESS+TI3Yc1YgN4=' 'sha256-j6utZtRCagKjxT02cEEu9VN+7Mn/NHtiE8uUEdRiJgI=' 'sha256-rDjmSpbjgWHGqEB7mLCnxaTQ3dJwdhgH/zgRD1uVZzE=' 'sha256-zFf0gqj5EpIG+ucEF7P8QNfXhj4chKjvlAdW+Nou4aE=' 'sha256-L6W+tXPWlYNZGQuLuc1syRx0sKFlrlpZDJKd0D2SP0M=' 'sha256-kPvn2Nt6GEejd5Z0h51QR/Re1UXdw77bGa447JXIoSw=' 'sha256-qugsXBw27/P+6LEOci/W0MQsXBlp/PdsgrQGBf3BLJc=' blob:; worker-src blob:; style-src 'sha256-vhxI7IXkrBgLQllkf1BvQj7rWL/uvi0X++5+SJi+ANU='; img-src data: blob:; connect-src blob: data:; form-action 'none'; base-uri 'none'">
 <meta name="referrer" content="no-referrer">
 <title>POSB Statement Converter</title>
 <style>
@@ -1050,8 +1050,8 @@ code { font-size: 13px; background: var(--accent-soft); padding: 1px 4px; border
   const MONTHS = { Jan: 1, Feb: 2, Mar: 3, Apr: 4, May: 5, Jun: 6, Jul: 7, Aug: 8, Sep: 9, Oct: 10, Nov: 11, Dec: 12 };
   const { round2, pad } = E;
   const ZERO = 0.005;
-  const NUM_RE = /^[\d,]+\.\d{2}$/;
-  const num = (s) => parseFloat(String(s).replace(/,/g, ""));
+  const NUM_RE = /^[\d,]+\.\d{2}-?$/; // an overdrawn balance is printed with a trailing minus ("1,234.56-")
+  const num = (s) => { const t = String(s).replace(/,/g, ""); return t.endsWith("-") ? -parseFloat(t) : parseFloat(t); };
   const DATE_RE = /^(\d{2})\/(\d{2})\/(\d{4})$/;
   const iso = (s) => { const m = s.match(DATE_RE); return `${m[3]}-${m[2]}-${m[1]}`; };
   // "CURRENCY: SINGAPORE DOLLAR" -> ISO code.
@@ -1126,7 +1126,7 @@ code { font-size: 13px; background: var(--accent-soft); padding: 1px 4px; border
         continue;
       }
       if (!acct || !cols) continue;
-      const amounts = (items) => items.filter((it) => NUM_RE.test(it.s) || /^[A-Z]{3} [\d,]+\.\d{2}$/.test(it.s));
+      const amounts = (items) => items.filter((it) => NUM_RE.test(it.s) || /^[A-Z]{3} [\d,]+\.\d{2}-?$/.test(it.s));
       const lastNum = (items) => { const a = amounts(items); return a.length ? num(a[a.length - 1].s.replace(/^[A-Z]{3} /, "")) : null; };
       if (/^Balance Brought Forward/.test(t)) {
         const v = lastNum(l.items);

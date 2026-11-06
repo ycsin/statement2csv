@@ -16,8 +16,8 @@
   const MONTHS = { Jan: 1, Feb: 2, Mar: 3, Apr: 4, May: 5, Jun: 6, Jul: 7, Aug: 8, Sep: 9, Oct: 10, Nov: 11, Dec: 12 };
   const { round2, pad } = E;
   const ZERO = 0.005;
-  const NUM_RE = /^[\d,]+\.\d{2}$/;
-  const num = (s) => parseFloat(String(s).replace(/,/g, ""));
+  const NUM_RE = /^[\d,]+\.\d{2}-?$/; // an overdrawn balance is printed with a trailing minus ("1,234.56-")
+  const num = (s) => { const t = String(s).replace(/,/g, ""); return t.endsWith("-") ? -parseFloat(t) : parseFloat(t); };
   const DATE_RE = /^(\d{2})\/(\d{2})\/(\d{4})$/;
   const iso = (s) => { const m = s.match(DATE_RE); return `${m[3]}-${m[2]}-${m[1]}`; };
   // "CURRENCY: SINGAPORE DOLLAR" -> ISO code.
@@ -92,7 +92,7 @@
         continue;
       }
       if (!acct || !cols) continue;
-      const amounts = (items) => items.filter((it) => NUM_RE.test(it.s) || /^[A-Z]{3} [\d,]+\.\d{2}$/.test(it.s));
+      const amounts = (items) => items.filter((it) => NUM_RE.test(it.s) || /^[A-Z]{3} [\d,]+\.\d{2}-?$/.test(it.s));
       const lastNum = (items) => { const a = amounts(items); return a.length ? num(a[a.length - 1].s.replace(/^[A-Z]{3} /, "")) : null; };
       if (/^Balance Brought Forward/.test(t)) {
         const v = lastNum(l.items);
