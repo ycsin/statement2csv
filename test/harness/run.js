@@ -819,11 +819,12 @@ function csvProblems(text, { header = null } = {}) {
   return out;
 }
 
-// A QIF text: "!Type:Bank", then records of field lines, each record ending with "^".
+// A QIF text: "!Type:Bank" (or "!Type:CCard", a credit card's), then records of field lines,
+// each record ending with "^".
 function qifProblems(text) {
   const out = [];
   const lines = String(text).split("\n");
-  if (lines[0] !== "!Type:Bank") out.push("does not start with !Type:Bank");
+  if (lines[0] !== "!Type:Bank" && lines[0] !== "!Type:CCard") out.push("does not start with !Type:Bank or !Type:CCard");
   if (lines[lines.length - 1] !== "") out.push("does not end with a line break");
   let record = [];
   let bad = 0;

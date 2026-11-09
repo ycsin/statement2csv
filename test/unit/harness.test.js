@@ -922,7 +922,9 @@ test("qifProblems and fileProblems: the QIF records, and a file type without a r
   const good = coreExport.qif([{ date: "2026-01-05", amount: -5, name: "Deposit", notes: "n" }], { balance: 1, date: "2026-01-04" }, "Acct");
   assert.deepEqual(checks.qifProblems(good), []);
   assert.deepEqual(checks.qifProblems("!Type:Bank\n"), []);
-  assert.deepEqual(checks.qifProblems("Type:Bank\n"), ["does not start with !Type:Bank"]);
+  assert.deepEqual(checks.qifProblems("!Type:CCard\n"), []);
+  assert.deepEqual(checks.qifProblems("Type:Bank\n"), ["does not start with !Type:Bank or !Type:CCard"]);
+  assert.deepEqual(checks.qifProblems("!Type:Invst\n"), ["does not start with !Type:Bank or !Type:CCard"]);
   assert.match(checks.qifProblems("!Type:Bank\nD2026-01-05\nT1.00").join("\n"), /does not end with a line break/);
   assert.deepEqual(checks.qifProblems("!Type:Bank\nD2026-01-05\nT1.00\n"), ["the last record does not end with ^"]);
   assert.deepEqual(checks.qifProblems("!Type:Bank\nPx\n^\n"), ["line 3: a record without a D or T line"]);
