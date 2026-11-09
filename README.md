@@ -29,6 +29,7 @@ converter's page says exactly which statement formats it reads and what it expor
 | Chocolate | Chocolate Finance monthly account statement PDFs, one account per currency | [ycsin.github.io/statement2csv/chocolate/](https://ycsin.github.io/statement2csv/chocolate/) |
 | MariBank | MariBank Deposit and Investment Statement PDFs, one set of files for the savings account and one per fund | [ycsin.github.io/statement2csv/maribank/](https://ycsin.github.io/statement2csv/maribank/) |
 | Maybank | Maybank account statement PDFs | [ycsin.github.io/statement2csv/maybank/](https://ycsin.github.io/statement2csv/maybank/) |
+| Maybank Credit Card | Maybank credit card statement PDFs, one card per statement | [ycsin.github.io/statement2csv/maybank-creditcard/](https://ycsin.github.io/statement2csv/maybank-creditcard/) |
 | POSB | POSB and DBS monthly statement PDFs and transaction history CSVs, one account per deposit account and currency | [ycsin.github.io/statement2csv/posb/](https://ycsin.github.io/statement2csv/posb/) |
 | StashAway | StashAway monthly statement PDFs, one set of files per portfolio | [ycsin.github.io/statement2csv/stashaway/](https://ycsin.github.io/statement2csv/stashaway/) |
 | Versa | AHAM Capital (Versa) Statement of Account PDFs, one investment account per account number and fund currency | [ycsin.github.io/statement2csv/versa/](https://ycsin.github.io/statement2csv/versa/) |

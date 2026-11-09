@@ -1,0 +1,18 @@
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- Copyright 2026 Yong Cong Sin <yongcong.sin@gmail.com> -->
+<template data-slot="h1">Maybank credit card statement to CSV and QIF</template>
+<template data-slot="lede">Turns Maybank (Malaysia) credit card statement PDFs (the monthly e-statements, one per card) into CSV or QIF files you can import into a personal finance app, one per card. The PDFs are read in this browser and never uploaded.</template>
+<template data-slot="drop-title">Drop statement PDFs here</template>
+<template data-slot="drop-help">or click to choose files. Add every month of every card you have; you pick which months to export below.</template>
+<template data-slot="mode-label">Funds</template>
+<template data-slot="hint">Most apps don't skip duplicates when importing CSVs, so export only months you haven't imported yet. The newest month ends on its statement date; the rest of it comes with the next statement, so export it once that one is loaded. Each card starts from the balance just before the first exported entry (see the Accounts CSV).</template>
+<template data-slot="config-help">Detected from the statements: one account per card (the last digits of the card number tell same-named cards apart). Override only if something's off: rename the exported account, change its type, merge it into another account, or leave it out. Saved in this browser.</template>
+<template data-slot="help-items">
+  <li>One <em>Transactions CSV</em> per card with every transaction, dated by its posting date (the date the statement counts it on). The name is the merchant as printed; the notes are its city and country, the amount in the original currency for foreign transactions, and the transaction date when it differs from the posting date.</li>
+  <li>A purchase is an outflow and a payment or refund an inflow. Each statement runs from the 7th to the 6th, so calendar months are put together from the statements around them: a month is complete once the next month's statement is loaded. Every statement is checked against its previous balance, its total credit and debit and its new balance, and against the statement before it; any mismatch is reported, nothing is adjusted.</li>
+  <li>The interest rate line each statement prints is not a transaction and is left out; it's counted under <em>What was skipped</em>.</li>
+  <li>If a month's statement isn't loaded, one <em>Balance change not covered by statements</em> row keeps later balances exact. Load the missing statement to replace it.</li>
+  <li><strong>QIF</strong>: the same transactions as a credit card (<code>!Type:CCard</code>) QIF file per card, starting with an <em>Opening Balance</em> record that holds the amount owed just before the first entry (negative for a credit balance), so no separate starting balance or column mapping is needed. Dates are <code>YYYY-MM-DD</code>; the name is the payee (<code>P</code>) and the notes the memo (<code>M</code>).</li>
+  <li><strong>Accounts CSV</strong>: one row per exported card (<code>Account type, Name, Balance, Currency, Balance Date</code>), of type <em>Credit Card</em>, with the amount owed just before the first exported entry (negative for a credit balance). <strong>Combined CSV</strong>: all cards in one file with a leading <code>account</code> column, for multi-account imports; import the Accounts CSV first so the names match.</li>
+  {{> help-columns-transactions}}
+</template>
