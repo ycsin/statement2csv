@@ -27,6 +27,7 @@ converter's page says exactly which statement formats it reads and what it expor
 | Provider | Statements | Converter |
 |---|---|---|
 | Chocolate | Chocolate Finance monthly account statement PDFs, one account per currency | [ycsin.github.io/statement2csv/chocolate/](https://ycsin.github.io/statement2csv/chocolate/) |
+| HSBC SG Credit Card | HSBC Singapore credit card statement PDFs, one card account per statement | [ycsin.github.io/statement2csv/hsbc-sg-creditcard/](https://ycsin.github.io/statement2csv/hsbc-sg-creditcard/) |
 | MariBank | MariBank Deposit and Investment Statement PDFs, one set of files for the savings account and one per fund | [ycsin.github.io/statement2csv/maribank/](https://ycsin.github.io/statement2csv/maribank/) |
 | Maybank | Maybank account statement PDFs | [ycsin.github.io/statement2csv/maybank/](https://ycsin.github.io/statement2csv/maybank/) |
 | Maybank Credit Card | Maybank credit card statement PDFs, one card per statement | [ycsin.github.io/statement2csv/maybank-creditcard/](https://ycsin.github.io/statement2csv/maybank-creditcard/) |
